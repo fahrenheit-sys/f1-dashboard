@@ -22,6 +22,13 @@ const STAGE_MAP: Record<string, string> = {
   'Founding Member': 'founding_member',
 }
 
+// Membership interests must match the leads CHECK constraint. 'comprehensive'
+// was merged into 'signature'; normalise any legacy/incoming value.
+function normalizeMembership(v: string | null | undefined): string | null {
+  if (!v) return null
+  return v === 'comprehensive' ? 'signature' : v
+}
+
 function deriveGeneration(yob: number | null): string | null {
   if (!yob) return null
   if (yob >= 2010) return 'gen_alpha'
@@ -77,7 +84,7 @@ export async function POST(req: NextRequest) {
       last_name:           contact.lastName ?? '',
       email,
       mobile:              contact.phone ?? null,
-      membership_interest: contact.customField?.membership_interest ?? null,
+      membership_interest: normalizeMembership(contact.customField?.membership_interest),
       preferred_time:      preferredTime,
       year_of_birth:       yob,
       generation:          deriveGeneration(yob),

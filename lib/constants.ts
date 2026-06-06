@@ -38,9 +38,10 @@ export const TRIBE_LABELS: Record<string, string> = {
 
 export const MEMBERSHIP_LABELS: Record<string, string> = {
   hakoah_one:    'Hakoah One',
+  signature:     'Signature',
   fitness:       'Fitness',
   wellness:      'Wellness',
-  comprehensive: 'Comprehensive',
+  comprehensive: 'Comprehensive', // legacy — merged into Signature
   teen:          'Teen',
   family:        'Family',
   corporate:     'Corporate',
@@ -96,6 +97,7 @@ export const TRIBE_COLORS: Record<string, string> = {
 
 export const MEMBERSHIP_COLORS: Record<string, string> = {
   hakoah_one:    '#E8A020',
+  signature:     '#2F3E2E',
   fitness:       '#3B6E9E',
   wellness:      '#4A6B50',
   comprehensive: '#2F3E2E',

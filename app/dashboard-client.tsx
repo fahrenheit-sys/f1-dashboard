@@ -8,13 +8,13 @@ import {
 import type { Stats } from '@/lib/stats'
 import type { SessionUser } from '@/lib/session'
 import type { TeamMember } from '@/lib/team'
-import type { DashboardConfig, Product } from '@/lib/config'
+import type { DashboardConfig, Product, Milestone } from '@/lib/config'
 import { addLead, type AddLeadInput } from './actions'
 import { logout } from './auth-actions'
 import { createMember, suspendMember, reactivateMember, deleteMember, setMemberRole } from './team-actions'
 import { UI } from '@/lib/theme'
 import {
-  GENERATION_LABELS, TRIBE_LABELS, MEMBERSHIP_LABELS,
+  GENERATION_LABELS, TRIBE_LABELS,
   SOURCE_LABELS, STAGE_LABELS, GENERATION_COLORS,
   TRIBE_COLORS, MEMBERSHIP_COLORS, BRAND
 } from '@/lib/constants'
@@ -133,8 +133,10 @@ function DimBar({ label, value, total, color, sold }: { label: string; value: nu
 }
 
 // ── Add Lead Modal ────────────────────────────────────────
-function AddLeadModal({ onClose }: { onClose: () => void }) {
+function AddLeadModal({ onClose, products }: { onClose: () => void; products: Product[] }) {
   const router = useRouter()
+  // Selectable membership interests follow the Supabase product catalog, plus "Not sure".
+  const membershipOptions: [string, string][] = [...products.map(p => [p.slug, p.name] as [string, string]), ['not_sure', 'Not sure']]
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [form, setForm] = useState({
@@ -184,7 +186,7 @@ function AddLeadModal({ onClose }: { onClose: () => void }) {
           <div>
             <label style={labelStyle}>Membership Interest</label>
             <select value={form.membership_interest} onChange={e => set('membership_interest', e.target.value)} style={inputStyle}>
-              {Object.entries(MEMBERSHIP_LABELS).map(([v,l]) => <option key={v} value={v}>{l}</option>)}
+              {membershipOptions.map(([v,l]) => <option key={v} value={v}>{l}</option>)}
             </select>
           </div>
           <div>
@@ -476,14 +478,14 @@ function MarketIntelligence({ stats, membershipLabels }: { stats: Stats; members
   )
 }
 
-function CrossAnalysis({ stats, membershipLabels }: { stats: Stats; membershipLabels: Record<string, string> }) {
+function CrossAnalysis({ stats, membershipLabels, products }: { stats: Stats; membershipLabels: Record<string, string>; products: Product[] }) {
   const [xAxis, setXAxis] = useState<'generation' | 'tribe'>('generation')
 
   const LABELS = xAxis === 'generation' ? GENERATION_LABELS : TRIBE_LABELS
   const COLORS_MAP = xAxis === 'generation' ? GENERATION_COLORS : TRIBE_COLORS
   const crossData = xAxis === 'generation' ? stats.crossGenMem : stats.crossTribeMem
 
-  const allMems = ['fitness','wellness','comprehensive','hakoah_one','teen','family']
+  const allMems = products.map(p => p.slug)
   const rows = Object.entries(crossData).map(([dim, memMap]) => ({
     dim: LABELS[dim] ?? dim,
     color: COLORS_MAP[dim] ?? BRAND.slate,
@@ -692,7 +694,7 @@ function MembershipIntelligence({ stats, products }: { stats: Stats; products: P
   )
 }
 
-function OpeningReadiness({ stats }: { stats: Stats }) {
+function OpeningReadiness({ stats, milestones }: { stats: Stats; milestones: Milestone[] }) {
   const tribeCapacity = Object.entries(stats.byTribe).map(([k, v]) => ({
     name: TRIBE_LABELS[k] ?? k,
     members: stats.soldByTribe[k] ?? 0,
@@ -707,20 +709,6 @@ function OpeningReadiness({ stats }: { stats: Stats }) {
       value: v,
       color: GENERATION_COLORS[k] ?? BRAND.slate,
     }))
-
-  const milestones = [
-    { name: 'Community Awareness',    date: 'Jun 2026', done: true,  track: 'community' },
-    { name: 'Community Interest',     date: 'Jul 2026', done: false, track: 'community' },
-    { name: 'Community VIP List',     date: 'Aug 2026', done: false, track: 'community' },
-    { name: 'Community Membership Drop', date: 'Sep 2026', done: false, track: 'community' },
-    { name: 'Local Awareness',        date: 'Nov 2026', done: false, track: 'local' },
-    { name: 'Local Interest',         date: 'Dec 2026', done: false, track: 'local' },
-    { name: 'Local VIP List',         date: 'Jan 2027', done: false, track: 'local' },
-    { name: 'Local Membership Drop',  date: 'Feb 2027', done: false, track: 'local' },
-    { name: 'Fitout Complete',        date: 'Feb 2027', done: false, track: 'both' },
-    { name: 'Early Access',           date: 'Apr 2027', done: false, track: 'both' },
-    { name: 'Opening Day',            date: 'Apr 2027', done: false, track: 'both' },
-  ]
 
   return (
     <div className="fade-up">
@@ -1031,15 +1019,15 @@ export default function Dashboard({ stats, user, initialTeam, config }: { stats:
           {section === 'overview'  && <ExecutiveOverview stats={stats} />}
           {section === 'marketing' && <MarketingPerformance stats={stats} />}
           {section === 'intel'     && <MarketIntelligence stats={stats} membershipLabels={config.membershipLabels} />}
-          {section === 'cross'     && <CrossAnalysis stats={stats} membershipLabels={config.membershipLabels} />}
+          {section === 'cross'     && <CrossAnalysis stats={stats} membershipLabels={config.membershipLabels} products={config.products} />}
           {section === 'sales'     && <SalesPerformance stats={stats} />}
           {section === 'product'   && <MembershipIntelligence stats={stats} products={config.products} />}
-          {section === 'readiness' && <OpeningReadiness stats={stats} />}
+          {section === 'readiness' && <OpeningReadiness stats={stats} milestones={config.milestones} />}
           {section === 'team'      && isAdmin && <TeamAccess team={initialTeam} currentUserId={user.sub} />}
         </div>
       </main>
 
-      {showAddLead && <AddLeadModal onClose={() => setShowAddLead(false)} />}
+      {showAddLead && <AddLeadModal onClose={() => setShowAddLead(false)} products={config.products} />}
     </div>
   )
 }
