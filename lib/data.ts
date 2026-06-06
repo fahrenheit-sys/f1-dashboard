@@ -1,5 +1,5 @@
 import { createServerSupabase } from './supabase-server'
-import { computeStats, type LeadRow, type Stats } from './stats'
+import { computeStats, type LeadRow, type Stats, type StatsOptions } from './stats'
 
 const DIMENSION_COLUMNS =
   'stage, track, generation, tribe, membership_interest, lead_source, membership_sold, monthly_rate, created_at'
@@ -8,7 +8,7 @@ const DIMENSION_COLUMNS =
 // stays correct as the lead count grows past that.
 const PAGE_SIZE = 1000
 
-export async function getDashboardStats(): Promise<Stats> {
+export async function getDashboardStats(opts: StatsOptions = {}): Promise<Stats> {
   const supabase = createServerSupabase()
   const rows: LeadRow[] = []
 
@@ -24,5 +24,5 @@ export async function getDashboardStats(): Promise<Stats> {
     if (data.length < PAGE_SIZE) break
   }
 
-  return computeStats(rows)
+  return computeStats(rows, opts)
 }

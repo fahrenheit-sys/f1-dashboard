@@ -8,6 +8,7 @@ import {
 import type { Stats } from '@/lib/stats'
 import type { SessionUser } from '@/lib/session'
 import type { TeamMember } from '@/lib/team'
+import type { DashboardConfig, Product } from '@/lib/config'
 import { addLead, type AddLeadInput } from './actions'
 import { logout } from './auth-actions'
 import { createMember, suspendMember, reactivateMember, deleteMember, setMemberRole } from './team-actions'
@@ -389,7 +390,7 @@ function MarketingPerformance({ stats }: { stats: Stats }) {
   )
 }
 
-function MarketIntelligence({ stats }: { stats: Stats }) {
+function MarketIntelligence({ stats, membershipLabels }: { stats: Stats; membershipLabels: Record<string, string> }) {
   const [lens, setLens] = useState<'generation' | 'tribe' | 'membership'>('generation')
 
   const genData  = Object.entries(stats.byGen).map(([k, v]) => ({
@@ -405,7 +406,7 @@ function MarketIntelligence({ stats }: { stats: Stats }) {
   })).sort((a, b) => b.value - a.value)
 
   const memData = Object.entries(stats.byMem).map(([k, v]) => ({
-    name: MEMBERSHIP_LABELS[k] ?? k, value: v,
+    name: membershipLabels[k] ?? k, value: v,
     sold: stats.soldByMem[k] ?? 0,
     color: MEMBERSHIP_COLORS[k] ?? BRAND.slate,
   })).sort((a, b) => b.value - a.value)
@@ -475,7 +476,7 @@ function MarketIntelligence({ stats }: { stats: Stats }) {
   )
 }
 
-function CrossAnalysis({ stats }: { stats: Stats }) {
+function CrossAnalysis({ stats, membershipLabels }: { stats: Stats; membershipLabels: Record<string, string> }) {
   const [xAxis, setXAxis] = useState<'generation' | 'tribe'>('generation')
 
   const LABELS = xAxis === 'generation' ? GENERATION_LABELS : TRIBE_LABELS
@@ -517,7 +518,7 @@ function CrossAnalysis({ stats }: { stats: Stats }) {
             <thead>
               <tr>
                 <th style={{ width: 130 }}>{xAxis.toUpperCase()}</th>
-                {allMems.map(m => <th key={m} style={{ textAlign: 'center' }}>{MEMBERSHIP_LABELS[m]}</th>)}
+                {allMems.map(m => <th key={m} style={{ textAlign: 'center' }}>{membershipLabels[m] ?? m}</th>)}
                 <th style={{ textAlign: 'center' }}>TOTAL</th>
               </tr>
             </thead>
@@ -565,7 +566,7 @@ function CrossAnalysis({ stats }: { stats: Stats }) {
             <XAxis dataKey="dim" tick={AXIS_TICK_STRONG} axisLine={false} tickLine={false} />
             <YAxis tick={AXIS_TICK} axisLine={false} tickLine={false} />
             <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(0,0,0,0.04)' }} />
-            <Legend iconType="circle" iconSize={8} formatter={(v) => <span style={{ fontSize: 10, color: UI.textMuted }}>{MEMBERSHIP_LABELS[v] ?? v}</span>} />
+            <Legend iconType="circle" iconSize={8} formatter={(v) => <span style={{ fontSize: 10, color: UI.textMuted }}>{membershipLabels[v] ?? v}</span>} />
             {allMems.map(m => (
               <Bar key={m} dataKey={m} stackId="a" fill={MEMBERSHIP_COLORS[m]} name={m} />
             ))}
@@ -645,17 +646,7 @@ function SalesPerformance({ stats }: { stats: Stats }) {
   )
 }
 
-function MembershipIntelligence({ stats }: { stats: Stats }) {
-  const products = [
-    { name: 'Hakoah One', slug: 'hakoah_one', target: 180, rate: 89,  track: 'community' },
-    { name: 'Signature',  slug: 'signature',  target: 80,  rate: 149, track: 'both' },
-    { name: 'Fitness',    slug: 'fitness',    target: 120, rate: 99,  track: 'both' },
-    { name: 'Wellness',   slug: 'wellness',   target: 80,  rate: 79,  track: 'both' },
-    { name: 'Teen',       slug: 'teen',       target: 45,  rate: 49,  track: 'both' },
-    { name: 'Family',     slug: 'family',     target: 40,  rate: 199, track: 'both' },
-    { name: 'Corporate',  slug: 'corporate',  target: 20,  rate: 129, track: 'local' },
-  ]
-
+function MembershipIntelligence({ stats, products }: { stats: Stats; products: Product[] }) {
   return (
     <div className="fade-up">
       <SectionHead title="Membership Product Intelligence" sub="Which products are generating demand and converting" />
@@ -931,7 +922,7 @@ function TeamAccess({ team, currentUserId }: { team: TeamMember[]; currentUserId
 // ══════════════════════════════════════════════════════════
 type Section = 'overview' | 'marketing' | 'intel' | 'cross' | 'sales' | 'product' | 'readiness' | 'team'
 
-export default function Dashboard({ stats, user, initialTeam }: { stats: Stats; user: SessionUser; initialTeam: TeamMember[] }) {
+export default function Dashboard({ stats, user, initialTeam, config }: { stats: Stats; user: SessionUser; initialTeam: TeamMember[]; config: DashboardConfig }) {
   const router = useRouter()
   const [section, setSection] = useState<Section>('overview')
   const [showAddLead, setShowAddLead] = useState(false)
@@ -1039,10 +1030,10 @@ export default function Dashboard({ stats, user, initialTeam }: { stats: Stats; 
         <div style={{ padding: '32px' }}>
           {section === 'overview'  && <ExecutiveOverview stats={stats} />}
           {section === 'marketing' && <MarketingPerformance stats={stats} />}
-          {section === 'intel'     && <MarketIntelligence stats={stats} />}
-          {section === 'cross'     && <CrossAnalysis stats={stats} />}
+          {section === 'intel'     && <MarketIntelligence stats={stats} membershipLabels={config.membershipLabels} />}
+          {section === 'cross'     && <CrossAnalysis stats={stats} membershipLabels={config.membershipLabels} />}
           {section === 'sales'     && <SalesPerformance stats={stats} />}
-          {section === 'product'   && <MembershipIntelligence stats={stats} />}
+          {section === 'product'   && <MembershipIntelligence stats={stats} products={config.products} />}
           {section === 'readiness' && <OpeningReadiness stats={stats} />}
           {section === 'team'      && isAdmin && <TeamAccess team={initialTeam} currentUserId={user.sub} />}
         </div>

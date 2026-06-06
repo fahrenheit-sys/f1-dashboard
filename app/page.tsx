@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { getLiveSessionUser } from '@/lib/auth'
 import { getDashboardStats } from '@/lib/data'
+import { getDashboardConfig } from '@/lib/config'
 import { listTeam, type TeamMember } from '@/lib/team'
 import Dashboard from './dashboard-client'
 
@@ -12,8 +13,9 @@ export default async function Page() {
   const user = await getLiveSessionUser()
   if (!user) redirect('/logout')
 
-  const stats = await getDashboardStats()
+  const config = await getDashboardConfig()
+  const stats = await getDashboardStats({ targets: config.targets, openingDate: config.openingDate })
   const team: TeamMember[] = user.role === 'admin' ? await listTeam() : []
 
-  return <Dashboard stats={stats} user={user} initialTeam={team} />
+  return <Dashboard stats={stats} user={user} initialTeam={team} config={config} />
 }

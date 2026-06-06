@@ -16,9 +16,17 @@ export type LeadRow = {
   created_at: string
 }
 
-const OPENING_DATE = '2027-04-15'
+const DEFAULT_OPENING_DATE = '2027-04-15'
+const DEFAULT_TARGETS = { total: 445, community: 180, local: 265 }
 
-export function computeStats(leads: LeadRow[]) {
+export type StatsOptions = {
+  targets?: { total: number; community: number; local: number }
+  openingDate?: string
+}
+
+export function computeStats(leads: LeadRow[], opts: StatsOptions = {}) {
+  const targets = opts.targets ?? DEFAULT_TARGETS
+  const openingDate = opts.openingDate ?? DEFAULT_OPENING_DATE
   const total = leads.length
   const soldLeads = leads.filter(l => l.membership_sold)
   const sold = soldLeads.length
@@ -100,10 +108,10 @@ export function computeStats(leads: LeadRow[]) {
     byStage, byGen, byTribe, byMem, bySrc, byTrackStage,
     soldByTrack, soldByGen, soldByTribe, soldByMem, soldBySrc,
     crossGenMem, crossTribeMem, weekly,
-    daysToOpen: Math.ceil((new Date(OPENING_DATE).getTime() - Date.now()) / 86400000),
-    targetTotal: 445,
-    targetCommunity: 180,
-    targetLocal: 265,
+    daysToOpen: Math.ceil((new Date(openingDate).getTime() - Date.now()) / 86400000),
+    targetTotal: targets.total,
+    targetCommunity: targets.community,
+    targetLocal: targets.local,
   }
 }
 
