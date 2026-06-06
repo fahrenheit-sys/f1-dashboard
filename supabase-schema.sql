@@ -16,7 +16,9 @@ CREATE TABLE leads (
   mobile TEXT,
 
   -- Segmentation (captured at opt-in)
-  membership_interest TEXT CHECK (membership_interest IN ('fitness','wellness','comprehensive','teen','family','corporate','not_sure')),
+  -- Canonical set mirrors the membership_products catalog (+ not_sure).
+  -- 'comprehensive' was merged into 'signature' (see MIGRATIONS at end of file).
+  membership_interest TEXT CHECK (membership_interest IN ('hakoah_one','signature','fitness','wellness','teen','family','corporate','not_sure')),
   preferred_time TEXT CHECK (preferred_time IN ('early_morning','mid_morning','lunchtime','afternoon','evening','weekends')),
   year_of_birth INTEGER,
 
@@ -84,6 +86,19 @@ CREATE TABLE membership_products (
   target_members INTEGER,
   description TEXT
 );
+
+-- SETTINGS — single-row dashboard config (opening-day targets + date).
+-- Read by the dashboard via lib/config.ts; edit the row in the Table Editor.
+-- The dashboard falls back to these same defaults if the table is absent.
+CREATE TABLE settings (
+  id INTEGER PRIMARY KEY DEFAULT 1,
+  target_total INTEGER NOT NULL DEFAULT 445,
+  target_community INTEGER NOT NULL DEFAULT 180,
+  target_local INTEGER NOT NULL DEFAULT 265,
+  opening_date DATE NOT NULL DEFAULT '2027-04-15',
+  CONSTRAINT settings_singleton CHECK (id = 1)
+);
+INSERT INTO settings (id) VALUES (1) ON CONFLICT (id) DO NOTHING;
 
 -- PIPELINE EVENTS — audit log of every stage change
 CREATE TABLE pipeline_events (
@@ -239,3 +254,46 @@ INSERT INTO milestones (name, stage_code, track, target_date, target_count) VALU
 ('Local Founding Members',        '4b', 'local',     '2027-02-28', 265),
 ('Early Access',                  '6',  'both',      '2027-04-01', NULL),
 ('Opening Day',                   '7',  'both',      '2027-04-15', 445);
+
+-- ============================================================
+-- MIGRATIONS — one-time scripts for databases created before a
+-- schema change. The CREATE statements above already reflect the
+-- final shape for fresh installs; run these to bring an existing
+-- database up to date. Safe to re-run (idempotent / guarded).
+-- ============================================================
+
+-- 2026-06 · Reconcile membership taxonomy.
+-- Canonical membership_interest set now mirrors membership_products (+ not_sure):
+-- adds 'hakoah_one' and 'signature', and merges legacy 'comprehensive' into 'signature'.
+-- Drops whatever the existing CHECK constraint is named, migrates the data, re-adds it.
+DO $$
+DECLARE c RECORD;
+BEGIN
+  FOR c IN
+    SELECT conname FROM pg_constraint
+    WHERE conrelid = 'public.leads'::regclass AND contype = 'c'
+      AND pg_get_constraintdef(oid) ILIKE '%membership_interest%'
+  LOOP
+    EXECUTE format('ALTER TABLE public.leads DROP CONSTRAINT %I', c.conname);
+  END LOOP;
+END $$;
+
+UPDATE public.leads SET membership_interest = 'signature'
+WHERE membership_interest = 'comprehensive';
+
+ALTER TABLE public.leads
+  ADD CONSTRAINT leads_membership_interest_check
+  CHECK (membership_interest IN
+    ('hakoah_one','signature','fitness','wellness','teen','family','corporate','not_sure'));
+
+-- 2026-06 · Settings table (no-op if it already exists; the CREATE above is the
+-- canonical version). Included here so existing databases get it too.
+CREATE TABLE IF NOT EXISTS settings (
+  id INTEGER PRIMARY KEY DEFAULT 1,
+  target_total INTEGER NOT NULL DEFAULT 445,
+  target_community INTEGER NOT NULL DEFAULT 180,
+  target_local INTEGER NOT NULL DEFAULT 265,
+  opening_date DATE NOT NULL DEFAULT '2027-04-15',
+  CONSTRAINT settings_singleton CHECK (id = 1)
+);
+INSERT INTO settings (id) VALUES (1) ON CONFLICT (id) DO NOTHING;
