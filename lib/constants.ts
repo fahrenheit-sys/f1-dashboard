@@ -29,10 +29,10 @@ export const GENERATION_LABELS: Record<string, string> = {
 
 export const TRIBE_LABELS: Record<string, string> = {
   early_bird:      '6AM Crew',
-  am_achiever:     'AM Achiever',
-  lunch_legends:   'Lunch Legends',
-  afternoon:       'Afternoon',
-  pm_warrior:      'PM Warrior',
+  am_achiever:     'School Run Squad',
+  lunch_legends:   'Lunch Break Legends',
+  afternoon:       'Afternoon Avengers',
+  pm_warrior:      '5PM Tribe',
   weekend_warrior: 'Weekend Warriors',
 }
 
