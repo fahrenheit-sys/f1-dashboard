@@ -16,17 +16,20 @@ const SERVICE = () => {
 export type AuthUser = {
   id: string
   email: string
-  role: string
+  role: string | null // top-level suite role ('owner'); null for ordinary users
+  apps: Record<string, string> // per-tool grants, e.g. { dashboard: 'admin' }
   created_at: string
   last_sign_in_at: string | null
   banned_until: string | null
 }
 
 function mapUser(u: any): AuthUser {
+  const meta = u.app_metadata ?? {}
   return {
     id: u.id,
     email: u.email,
-    role: u.app_metadata?.role ?? 'member',
+    role: meta.role ?? null,
+    apps: (meta.apps && typeof meta.apps === 'object') ? meta.apps : {},
     created_at: u.created_at,
     last_sign_in_at: u.last_sign_in_at ?? null,
     banned_until: u.banned_until ?? null,
@@ -72,12 +75,12 @@ export async function adminListUsers(): Promise<AuthUser[]> {
   return (body.users ?? []).map(mapUser)
 }
 
-export async function adminCreateUser(email: string, password: string, role: string):
+export async function adminCreateUser(email: string, password: string, appMetadata: Record<string, unknown>):
   Promise<{ ok: true; user: AuthUser } | { ok: false; error: string }> {
   const res = await fetch(`${URL_()}/auth/v1/admin/users`, {
     method: 'POST',
     headers: adminHeaders(),
-    body: JSON.stringify({ email, password, email_confirm: true, app_metadata: { role } }),
+    body: JSON.stringify({ email, password, email_confirm: true, app_metadata: appMetadata }),
   })
   const body = await res.json().catch(() => ({}))
   if (!res.ok) return { ok: false, error: body.msg || body.error_description || `Failed (${res.status})` }

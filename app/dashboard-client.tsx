@@ -862,6 +862,7 @@ function TeamAccess({ team, currentUserId }: { team: TeamMember[]; currentUserId
           <tbody>
             {team.map(m => {
               const isSelf = m.id === currentUserId
+              const protectedRow = isSelf || m.isOwner // owners aren't managed from here
               const rowBusy = pending && busyId === m.id
               return (
                 <tr key={m.id}>
@@ -869,12 +870,17 @@ function TeamAccess({ team, currentUserId }: { team: TeamMember[]; currentUserId
                     {m.email}{isSelf && <span style={{ fontSize: 10, color: UI.textFaint, marginLeft: 6 }}>(you)</span>}
                   </td>
                   <td>
-                    <select value={m.role} disabled={isSelf || pending}
-                      onChange={e => run(m.id, () => setMemberRole(m.id, e.target.value))}
-                      style={{ ...inputStyle, padding: '5px 8px', fontSize: 12, width: 'auto', opacity: isSelf ? 0.6 : 1 }}>
-                      <option value="member">Member</option>
-                      <option value="admin">Admin</option>
-                    </select>
+                    {m.isOwner ? (
+                      <span className="track-pill both">Owner</span>
+                    ) : (
+                      <select value={m.role === 'none' ? 'none' : m.role} disabled={pending}
+                        onChange={e => run(m.id, () => setMemberRole(m.id, e.target.value))}
+                        style={{ ...inputStyle, padding: '5px 8px', fontSize: 12, width: 'auto' }}>
+                        {m.role === 'none' && <option value="none" disabled>No access</option>}
+                        <option value="member">Member</option>
+                        <option value="admin">Admin</option>
+                      </select>
+                    )}
                   </td>
                   <td>
                     <span className={`track-pill ${m.status === 'active' ? 'community' : 'local'}`}>
@@ -884,7 +890,7 @@ function TeamAccess({ team, currentUserId }: { team: TeamMember[]; currentUserId
                   <td style={{ fontFamily: 'DM Mono', fontSize: 12, color: UI.textMuted }}>{fmtDate(m.last_sign_in_at)}</td>
                   <td style={{ fontFamily: 'DM Mono', fontSize: 12, color: UI.textMuted }}>{fmtDate(m.created_at)}</td>
                   <td style={{ textAlign: 'right' }}>
-                    {!isSelf && (
+                    {!protectedRow && (
                       <div style={{ display: 'inline-flex', gap: 8 }}>
                         {m.status === 'active'
                           ? <button onClick={() => run(m.id, () => suspendMember(m.id))} disabled={pending} style={btn('ghost')}>{rowBusy ? '…' : 'Suspend'}</button>

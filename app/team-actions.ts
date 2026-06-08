@@ -2,7 +2,8 @@
 
 import { revalidatePath } from 'next/cache'
 import { requireAdmin } from '@/lib/auth'
-import { adminCreateUser, adminUpdateUser, adminDeleteUser } from '@/lib/gotrue'
+import { adminCreateUser, adminGetUser, adminUpdateUser, adminDeleteUser } from '@/lib/gotrue'
+import { TOOL } from '@/lib/access'
 
 export type ActionResult = { ok: true } | { ok: false; error: string }
 
@@ -15,7 +16,8 @@ export async function createMember(email: string, password: string, role: string
   if (!password || password.length < 6) return { ok: false, error: 'Password must be at least 6 characters' }
   if (role !== 'admin' && role !== 'member') return { ok: false, error: 'Invalid role' }
 
-  const res = await adminCreateUser(cleanEmail, password, role)
+  // Grant access to this tool only; other tools are granted separately.
+  const res = await adminCreateUser(cleanEmail, password, { apps: { [TOOL]: role } })
   if (!res.ok) return res
   revalidatePath('/')
   return { ok: true }
@@ -24,9 +26,13 @@ export async function createMember(email: string, password: string, role: string
 export async function setMemberRole(id: string, role: string): Promise<ActionResult> {
   const admin = await requireAdmin()
   if (role !== 'admin' && role !== 'member') return { ok: false, error: 'Invalid role' }
-  if (id === admin.sub && role !== 'admin') return { ok: false, error: 'You cannot remove your own admin access' }
+  if (id === admin.sub) return { ok: false, error: 'You cannot change your own access' }
 
-  const res = await adminUpdateUser(id, { app_metadata: { role } })
+  // Merge so grants for other tools are preserved.
+  const target = await adminGetUser(id)
+  if (!target) return { ok: false, error: 'User not found' }
+  const apps = { ...target.apps, [TOOL]: role }
+  const res = await adminUpdateUser(id, { app_metadata: { apps } })
   if (!res.ok) return res
   revalidatePath('/')
   return { ok: true }
