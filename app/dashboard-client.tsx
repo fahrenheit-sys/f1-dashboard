@@ -7,11 +7,9 @@ import {
 } from 'recharts'
 import type { Stats } from '@/lib/stats'
 import type { SessionUser } from '@/lib/session'
-import type { TeamMember } from '@/lib/team'
 import type { DashboardConfig, Product, Milestone } from '@/lib/config'
 import { addLead, type AddLeadInput } from './actions'
 import { logout } from './auth-actions'
-import { createMember, suspendMember, reactivateMember, deleteMember, setMemberRole } from './team-actions'
 import { UI } from '@/lib/theme'
 import {
   GENERATION_LABELS, TRIBE_LABELS,
@@ -787,142 +785,19 @@ function OpeningReadiness({ stats, milestones }: { stats: Stats; milestones: Mil
   )
 }
 
-// ── Team Access (admin only) ──────────────────────────────
-function TeamAccess({ team, currentUserId }: { team: TeamMember[]; currentUserId: string }) {
-  const router = useRouter()
-  const [pending, startTransition] = useTransition()
-  const [error, setError] = useState<string | null>(null)
-  const [busyId, setBusyId] = useState<string | null>(null)
-  const [form, setForm] = useState({ email: '', password: '', role: 'member' })
-
-  const run = (id: string | null, fn: () => Promise<{ ok: boolean; error?: string }>) => {
-    setError(null); setBusyId(id)
-    startTransition(async () => {
-      const res = await fn()
-      setBusyId(null)
-      if (!res.ok) { setError(res.error ?? 'Action failed'); return }
-      router.refresh()
-    })
-  }
-
-  const addMember = () => run(null, async () => {
-    const res = await createMember(form.email, form.password, form.role)
-    if (res.ok) setForm({ email: '', password: '', role: 'member' })
-    return res
-  })
-
-  const btn = (variant: 'ghost' | 'danger' | 'solid'): CSSProperties => ({
-    padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 500, cursor: pending ? 'default' : 'pointer',
-    border: `1px solid ${variant === 'danger' ? '#E5B4AD' : UI.borderStrong}`,
-    background: variant === 'solid' ? BRAND.forest : UI.surface,
-    color: variant === 'solid' ? '#fff' : variant === 'danger' ? BRAND.terra : UI.text,
-  })
-
-  return (
-    <div className="fade-up">
-      <SectionHead title="Team Access" sub="Grant, suspend, or remove dashboard access for your team" />
-
-      <div className="card" style={{ marginBottom: 16 }}>
-        <div className="mono" style={{ fontSize: 9, letterSpacing: '0.18em', color: UI.textFaint, marginBottom: 14 }}>INVITE A NEW MEMBER</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 1fr auto', gap: 12, alignItems: 'end' }}>
-          <div>
-            <label style={labelStyle}>Email</label>
-            <input type="email" value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))} placeholder="name@fahrenheitone.com" style={inputStyle} />
-          </div>
-          <div>
-            <label style={labelStyle}>Temporary Password</label>
-            <input type="text" value={form.password} onChange={e => setForm(p => ({ ...p, password: e.target.value }))} placeholder="min. 6 characters" style={inputStyle} />
-          </div>
-          <div>
-            <label style={labelStyle}>Role</label>
-            <select value={form.role} onChange={e => setForm(p => ({ ...p, role: e.target.value }))} style={inputStyle}>
-              <option value="member">Member</option>
-              <option value="admin">Admin</option>
-            </select>
-          </div>
-          <button onClick={addMember} disabled={pending} style={{ ...btn('solid'), padding: '10px 18px', fontSize: 13, fontWeight: 600, opacity: pending && busyId === null ? 0.6 : 1 }}>
-            {pending && busyId === null ? 'Adding…' : 'Grant Access'}
-          </button>
-        </div>
-        {error && (
-          <div style={{ marginTop: 14, padding: '10px 12px', background: '#FFF1EF', border: `1px solid ${BRAND.brick}`, borderRadius: UI.radiusSm, fontSize: 12.5, color: BRAND.terra }}>
-            {error}
-          </div>
-        )}
-      </div>
-
-      <div className="card">
-        <div className="mono" style={{ fontSize: 9, letterSpacing: '0.18em', color: UI.textFaint, marginBottom: 12 }}>TEAM MEMBERS · {team.length}</div>
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>EMAIL</th><th>ROLE</th><th>STATUS</th><th>LAST SIGN IN</th><th>ADDED</th><th style={{ textAlign: 'right' }}>ACTIONS</th>
-            </tr>
-          </thead>
-          <tbody>
-            {team.map(m => {
-              const isSelf = m.id === currentUserId
-              const protectedRow = isSelf || m.isOwner // owners aren't managed from here
-              const rowBusy = pending && busyId === m.id
-              return (
-                <tr key={m.id}>
-                  <td style={{ fontWeight: 500, color: UI.text }}>
-                    {m.email}{isSelf && <span style={{ fontSize: 10, color: UI.textFaint, marginLeft: 6 }}>(you)</span>}
-                  </td>
-                  <td>
-                    {m.isOwner ? (
-                      <span className="track-pill both">Owner</span>
-                    ) : (
-                      <select value={m.role === 'none' ? 'none' : m.role} disabled={pending}
-                        onChange={e => run(m.id, () => setMemberRole(m.id, e.target.value))}
-                        style={{ ...inputStyle, padding: '5px 8px', fontSize: 12, width: 'auto' }}>
-                        {m.role === 'none' && <option value="none" disabled>No access</option>}
-                        <option value="member">Member</option>
-                        <option value="admin">Admin</option>
-                      </select>
-                    )}
-                  </td>
-                  <td>
-                    <span className={`track-pill ${m.status === 'active' ? 'community' : 'local'}`}>
-                      {m.status === 'active' ? 'Active' : 'Suspended'}
-                    </span>
-                  </td>
-                  <td style={{ fontFamily: 'DM Mono', fontSize: 12, color: UI.textMuted }}>{fmtDate(m.last_sign_in_at)}</td>
-                  <td style={{ fontFamily: 'DM Mono', fontSize: 12, color: UI.textMuted }}>{fmtDate(m.created_at)}</td>
-                  <td style={{ textAlign: 'right' }}>
-                    {!protectedRow && (
-                      <div style={{ display: 'inline-flex', gap: 8 }}>
-                        {m.status === 'active'
-                          ? <button onClick={() => run(m.id, () => suspendMember(m.id))} disabled={pending} style={btn('ghost')}>{rowBusy ? '…' : 'Suspend'}</button>
-                          : <button onClick={() => run(m.id, () => reactivateMember(m.id))} disabled={pending} style={btn('ghost')}>{rowBusy ? '…' : 'Reactivate'}</button>}
-                        <button
-                          onClick={() => { if (confirm(`Delete access for ${m.email}? This cannot be undone.`)) run(m.id, () => deleteMember(m.id)) }}
-                          disabled={pending} style={btn('danger')}>Delete</button>
-                      </div>
-                    )}
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  )
-}
 
 // ══════════════════════════════════════════════════════════
 // MAIN APP
 // ══════════════════════════════════════════════════════════
-type Section = 'overview' | 'marketing' | 'intel' | 'cross' | 'sales' | 'product' | 'readiness' | 'team'
+type Section = 'overview' | 'marketing' | 'intel' | 'cross' | 'sales' | 'product' | 'readiness'
 
-export default function Dashboard({ stats, user, initialTeam, config }: { stats: Stats; user: SessionUser; initialTeam: TeamMember[]; config: DashboardConfig }) {
+export default function Dashboard({ stats, user, config }: { stats: Stats; user: SessionUser; config: DashboardConfig }) {
   const router = useRouter()
   const [section, setSection] = useState<Section>('overview')
   const [showAddLead, setShowAddLead] = useState(false)
-  const isAdmin = user.role === 'admin'
+  const isAdmin = user.role === 'admin' // dashboard admin → can reach suite Team Access
 
-  const nav: { id: Section; label: string; icon: string; adminOnly?: boolean }[] = [
+  const nav: { id: Section; label: string; icon: string }[] = [
     { id: 'overview',   label: 'Executive Overview',  icon: Icons.overview },
     { id: 'marketing',  label: 'Marketing',            icon: Icons.marketing },
     { id: 'intel',      label: 'Market Intelligence',  icon: Icons.intel },
@@ -930,9 +805,8 @@ export default function Dashboard({ stats, user, initialTeam, config }: { stats:
     { id: 'sales',      label: 'Sales Performance',    icon: Icons.sales },
     { id: 'product',    label: 'Membership Products',  icon: Icons.product },
     { id: 'readiness',  label: 'Opening Readiness',    icon: Icons.readiness },
-    { id: 'team',       label: 'Team Access',          icon: Icons.team, adminOnly: true },
   ]
-  const visibleNav = nav.filter(n => !n.adminOnly || isAdmin)
+  const visibleNav = nav
 
   const doLogout = async () => { await logout(); router.replace('/login'); router.refresh() }
 
@@ -1012,6 +886,12 @@ export default function Dashboard({ stats, user, initialTeam, config }: { stats:
                 <div style={{ fontSize: 12.5, color: UI.text, fontWeight: 500 }}>{user.email}</div>
                 <div style={{ fontFamily: 'DM Mono', fontSize: 9, color: UI.textFaint, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{user.role}</div>
               </div>
+              {isAdmin && (
+                <a href="https://clubf1.tech/admin" title="Manage team access"
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', background: UI.surface, border: `1px solid ${UI.borderStrong}`, borderRadius: 9, color: UI.textMuted, fontSize: 12.5, textDecoration: 'none' }}>
+                  Manage access ↗
+                </a>
+              )}
               <button onClick={doLogout} title="Sign out"
                 style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', background: UI.surface, border: `1px solid ${UI.borderStrong}`, borderRadius: 9, color: UI.textMuted, cursor: 'pointer', fontSize: 12.5 }}>
                 <Icon d={Icons.logout} size={14} />
@@ -1029,7 +909,6 @@ export default function Dashboard({ stats, user, initialTeam, config }: { stats:
           {section === 'sales'     && <SalesPerformance stats={stats} />}
           {section === 'product'   && <MembershipIntelligence stats={stats} products={config.products} />}
           {section === 'readiness' && <OpeningReadiness stats={stats} milestones={config.milestones} />}
-          {section === 'team'      && isAdmin && <TeamAccess team={initialTeam} currentUserId={user.sub} />}
         </div>
       </main>
 

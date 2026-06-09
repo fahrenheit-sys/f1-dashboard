@@ -3,7 +3,6 @@ import { getLiveSessionUser } from '@/lib/auth'
 import { accessFor, TOOL } from '@/lib/access'
 import { getDashboardStats } from '@/lib/data'
 import { getDashboardConfig } from '@/lib/config'
-import { listTeam, type TeamMember } from '@/lib/team'
 import Dashboard from './dashboard-client'
 
 // Always read fresh stats from Supabase on each request.
@@ -20,8 +19,7 @@ export default async function Page() {
 
   const config = await getDashboardConfig()
   const stats = await getDashboardStats({ targets: config.targets, openingDate: config.openingDate })
-  const team: TeamMember[] = access === 'admin' ? await listTeam() : []
 
   const user = { sub: live.sub, email: live.email, role: access }
-  return <Dashboard stats={stats} user={user} initialTeam={team} config={config} />
+  return <Dashboard stats={stats} user={user} config={config} />
 }
