@@ -51,6 +51,14 @@ function normalizePreferredTime(v: string | null | undefined): string | null {
   return codes.includes(m) ? m : null
 }
 
+// GHL webhook payloads serialize tags as a comma-separated string; normalise to
+// a string[] whether we receive that or a real array.
+function parseTags(raw: unknown): string[] {
+  if (Array.isArray(raw)) return raw.map(String)
+  if (typeof raw === 'string') return raw.split(',').map(t => t.trim()).filter(Boolean)
+  return []
+}
+
 // Map an arbitrary UTM source onto the lead_source CHECK enum (defaults to 'other'
 // so an unexpected source never blocks the upsert).
 function normalizeLeadSource(utmSource: string | null | undefined): string {
@@ -112,7 +120,11 @@ export async function POST(req: NextRequest) {
       : null
 
     const preferredTime = normalizePreferredTime(contact.customField?.preferred_time)
-    const track = contact.tags?.some((t: string) => t.includes('community')) ? 'community' : 'local'
+    // GHL serializes tags as a comma-separated string in webhook payloads;
+    // accept both that and a real array. Track is also honoured if sent explicitly.
+    const tagList = parseTags(contact.tags)
+    const track = (contact.track ?? contact.customField?.track)
+      ?? (tagList.some(t => t.includes('community')) ? 'community' : 'local')
     const stage = STAGE_MAP[contact.pipelineStage ?? ''] ?? 'awareness'
 
     const leadData = {
@@ -135,7 +147,7 @@ export async function POST(req: NextRequest) {
       ghl_contact_id:      contact.id,
       assigned_to:         contact.assignedTo ?? null,
       membership_sold:     stage === 'founding_member' || stage === 'member',
-      tags:                contact.tags ?? [],
+      tags:                tagList,
     }
 
     const { data, error } = await supabase
