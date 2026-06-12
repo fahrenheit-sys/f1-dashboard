@@ -142,7 +142,7 @@ function AddLeadModal({ onClose, products }: { onClose: () => void; products: Pr
     track: 'community', membership_interest: 'not_sure',
     preferred_time: 'early_morning', year_of_birth: '',
     lead_source: 'hakoah_newsletter', is_hakoah_member: false,
-    stage: 'interest',
+    stage: 'vip_waitlist',
   })
   const set = (k: string, v: any) => setForm(p => ({ ...p, [k]: v }))
 
@@ -584,7 +584,7 @@ function SalesPerformance({ stats }: { stats: Stats }) {
     { name: 'Emma L.', assigned: 130, contacted: 110, conversations: 82, tours: 31, sold: 19, revenue: 19 * 124 },
   ]
 
-  const pipelineStages = ['awareness','interest','vip_waitlist','nurture','sold','founding_member']
+  const pipelineStages = ['awareness','vip_waitlist','event_attended','proposal','founding_member','member']
   const funnelData = pipelineStages.map(s => ({
     stage: STAGE_LABELS[s] ?? s,
     count: stats.byStage[s] ?? 0,

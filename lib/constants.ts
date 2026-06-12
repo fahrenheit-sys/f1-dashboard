@@ -38,14 +38,14 @@ export const TRIBE_LABELS: Record<string, string> = {
 
 export const MEMBERSHIP_LABELS: Record<string, string> = {
   hakoah_one:    'Hakoah One',
-  signature:     'Signature',
+  lifestyle:     'Lifestyle',
   fitness:       'Fitness',
   wellness:      'Wellness',
-  comprehensive: 'Comprehensive', // legacy — merged into Signature
   teen:          'Teen',
-  family:        'Family',
-  corporate:     'Corporate',
   not_sure:      'Not Sure',
+  // legacy values (pre-2026-06 rename) — kept so historical rows still render
+  signature:     'Lifestyle', // renamed → lifestyle
+  comprehensive: 'Lifestyle', // merged → lifestyle
 }
 
 export const SOURCE_LABELS: Record<string, string> = {
@@ -66,15 +66,18 @@ export const SOURCE_LABELS: Record<string, string> = {
 
 export const STAGE_LABELS: Record<string, string> = {
   awareness:       'Awareness',
-  interest:        'Interest',
   vip_waitlist:    'VIP Waitlist',
-  nurture:         'Nurture',
-  tour_booked:     'Tour Booked',
-  tour_attended:   'Tour Attended',
-  proposal:        'Proposal',
-  sold:            'Sold',
+  event_attended:  'Event Attended',
+  tour_attended:   'Toured',
+  proposal:        'Offer Made',
   founding_member: 'Founding Member',
   member:          'Member',
+  withdrawn:       'Withdrawn',
+  // legacy stage codes (pre-2026-06) — kept so historical rows still render
+  interest:        'Opted In',
+  nurture:         'Nurture',
+  tour_booked:     'Tour Booked',
+  sold:            'Sold',
 }
 
 export const GENERATION_COLORS: Record<string, string> = {
@@ -97,19 +100,19 @@ export const TRIBE_COLORS: Record<string, string> = {
 
 export const MEMBERSHIP_COLORS: Record<string, string> = {
   hakoah_one:    '#E8A020',
-  signature:     '#2F3E2E',
+  lifestyle:     '#2F3E2E',
   fitness:       '#3B6E9E',
   wellness:      '#4A6B50',
-  comprehensive: '#2F3E2E',
   teen:          '#5B4A8A',
-  family:        '#8B3A2E',
-  corporate:     '#44546A',
   not_sure:      '#aaa',
+  // legacy
+  signature:     '#2F3E2E',
+  comprehensive: '#2F3E2E',
 }
 
 export const PIPELINE_STAGES = [
-  'awareness','interest','vip_waitlist','nurture',
-  'tour_booked','tour_attended','proposal','sold','founding_member'
+  'awareness','vip_waitlist','event_attended','tour_attended',
+  'proposal','founding_member','member'
 ]
 
 export const OPENING_DATE = new Date('2027-04-15')

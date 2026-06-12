@@ -17,8 +17,9 @@ CREATE TABLE leads (
 
   -- Segmentation (captured at opt-in)
   -- Canonical set mirrors the membership_products catalog (+ not_sure).
-  -- 'comprehensive' was merged into 'signature' (see MIGRATIONS at end of file).
-  membership_interest TEXT CHECK (membership_interest IN ('hakoah_one','signature','fitness','wellness','teen','family','corporate','not_sure')),
+  -- 'signature'/'comprehensive' were merged into 'lifestyle'; family/corporate
+  -- dropped (see migrations/2026-06-12_stage_membership_reconcile.sql).
+  membership_interest TEXT CHECK (membership_interest IN ('hakoah_one','lifestyle','fitness','wellness','teen','not_sure')),
   preferred_time TEXT CHECK (preferred_time IN ('early_morning','mid_morning','lunchtime','afternoon','evening','weekends')),
   year_of_birth INTEGER,
 
@@ -31,9 +32,12 @@ CREATE TABLE leads (
   is_hakoah_member BOOLEAN DEFAULT FALSE,
 
   -- Pipeline stage
+  -- Warm-up-to-drop funnel (see CONTEXT §9). Community uses awareness →
+  -- vip_waitlist → event_attended → proposal → founding_member → member;
+  -- Local inserts tour_attended after event_attended. withdrawn = refunded/lost.
   stage TEXT DEFAULT 'awareness' CHECK (stage IN (
-    'awareness','interest','vip_waitlist','nurture','member',
-    'qualified_lead','tour_booked','tour_attended','proposal','sold','founding_member'
+    'awareness','vip_waitlist','event_attended','tour_attended',
+    'proposal','founding_member','member','withdrawn'
   )),
   stage_updated_at TIMESTAMPTZ DEFAULT NOW(),
 
@@ -233,12 +237,10 @@ CREATE TRIGGER leads_stage_change
 -- ── SEED: membership products ─────────────────────────────
 INSERT INTO membership_products (name, slug, track, monthly_rate, join_fee, is_founding, target_members, description) VALUES
 ('Hakoah One',    'hakoah_one',    'community', 89,  199, TRUE,  180, 'Founding community membership — pre-opening exclusive'),
-('Signature',     'signature',     'both',      149, 299, FALSE, 160, 'Full ecosystem: gym + wellness + classes + pool + eGym'),
-('Fitness',       'fitness',       'both',      99,  199, FALSE, 120, 'Gym floor + group fitness. Core training offering.'),
-('Wellness',      'wellness',      'both',      79,  149, FALSE, 80,  '9am–5pm wellness circuit + yoga + Pilates + eGym'),
-('Teen',          'teen',          'both',      49,  99,  FALSE, 45,  'Age 14+: eGym + supervised training. Afternoons + weekends.'),
-('Family',        'family',        'both',      199, 399, FALSE, 40,  '2 adults + dependants — shared full access'),
-('Corporate',     'corporate',     'local',     129, 0,   FALSE, 20,  'Employer-sponsored. Billed to corporate account.');
+('Lifestyle',     'lifestyle',     'both',      149, 299, FALSE, 160, 'Gym + classes + recovery centre + wellness circuit + pool + pickleball + run club. 7 days.'),
+('Fitness',       'fitness',       'both',      99,  199, FALSE, 120, 'Gym floor + group fitness. 7 days.'),
+('Wellness',      'wellness',      'both',      79,  149, FALSE, 80,  'Recovery Area + Wellness Circuit + Yoga + eGym. Mon–Fri 9am–5pm.'),
+('Teen',          'teen',          'both',      49,  99,  FALSE, 45,  'Age 14+: eGym + supervised training. Afternoons + weekends.');
 
 -- ── SEED: milestones ──────────────────────────────────────
 INSERT INTO milestones (name, stage_code, track, target_date, target_count) VALUES
@@ -262,29 +264,45 @@ INSERT INTO milestones (name, stage_code, track, target_date, target_count) VALU
 -- database up to date. Safe to re-run (idempotent / guarded).
 -- ============================================================
 
--- 2026-06 · Reconcile membership taxonomy.
--- Canonical membership_interest set now mirrors membership_products (+ not_sure):
--- adds 'hakoah_one' and 'signature', and merges legacy 'comprehensive' into 'signature'.
--- Drops whatever the existing CHECK constraint is named, migrates the data, re-adds it.
+-- 2026-06-12 · Reconcile membership taxonomy + pipeline stages.
+-- This block mirrors migrations/2026-06-12_stage_membership_reconcile.sql so a
+-- top-to-bottom run of this schema file lands on the final shape. For an
+-- already-live DB, run that standalone migration file instead.
+-- ORDER MATTERS: drop old constraints first, then migrate data, then re-add.
 DO $$
 DECLARE c RECORD;
 BEGIN
   FOR c IN
     SELECT conname FROM pg_constraint
     WHERE conrelid = 'public.leads'::regclass AND contype = 'c'
-      AND pg_get_constraintdef(oid) ILIKE '%membership_interest%'
+      AND (pg_get_constraintdef(oid) ILIKE '%membership_interest%'
+           OR (pg_get_constraintdef(oid) ILIKE '%stage%'
+               AND pg_get_constraintdef(oid) ILIKE '%awareness%'))
   LOOP
     EXECUTE format('ALTER TABLE public.leads DROP CONSTRAINT %I', c.conname);
   END LOOP;
 END $$;
 
-UPDATE public.leads SET membership_interest = 'signature'
-WHERE membership_interest = 'comprehensive';
+UPDATE public.leads SET stage = 'vip_waitlist'
+  WHERE stage IN ('interest','nurture','qualified_lead');
+UPDATE public.leads SET stage = 'event_attended' WHERE stage = 'tour_booked';
+UPDATE public.leads SET stage = 'founding_member' WHERE stage = 'sold';
+
+UPDATE public.leads SET membership_interest = 'lifestyle'
+  WHERE membership_interest IN ('signature','comprehensive');
+UPDATE public.leads SET membership_interest = 'not_sure'
+  WHERE membership_interest IN ('family','corporate');
 
 ALTER TABLE public.leads
   ADD CONSTRAINT leads_membership_interest_check
   CHECK (membership_interest IN
-    ('hakoah_one','signature','fitness','wellness','teen','family','corporate','not_sure'));
+    ('hakoah_one','lifestyle','fitness','wellness','teen','not_sure'));
+
+ALTER TABLE public.leads
+  ADD CONSTRAINT leads_stage_check
+  CHECK (stage IN
+    ('awareness','vip_waitlist','event_attended','tour_attended',
+     'proposal','founding_member','member','withdrawn'));
 
 -- 2026-06 · Settings table (no-op if it already exists; the CREATE above is the
 -- canonical version). Included here so existing databases get it too.

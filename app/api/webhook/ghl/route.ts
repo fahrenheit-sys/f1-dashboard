@@ -10,23 +10,59 @@ function getSupabase() {
   )
 }
 
+// GHL pipeline stage display names → canonical Supabase stage codes.
+// Covers both the Community and Local pipelines (see CONTEXT §9).
 const STAGE_MAP: Record<string, string> = {
-  'Awareness':       'awareness',
-  'Interest':        'interest',
-  'VIP Waitlist':    'vip_waitlist',
-  'Nurture':         'nurture',
-  'Tour Booked':     'tour_booked',
-  'Tour Attended':   'tour_attended',
-  'Proposal':        'proposal',
-  'Sold':            'sold',
-  'Founding Member': 'founding_member',
+  'Seed':             'awareness',
+  'New Lead':         'awareness',
+  'Opted In':         'vip_waitlist',   // opting in = joining the VIP/founders list
+  'VIP Waitlist':     'vip_waitlist',
+  'Event Attended':   'event_attended',
+  'Toured':           'tour_attended',
+  'Offer Made':       'proposal',
+  'Joining Fee Paid': 'founding_member',
+  'Member':           'member',
+  'Withdrawn':        'withdrawn',
 }
 
-// Membership interests must match the leads CHECK constraint. 'comprehensive'
-// was merged into 'signature'; normalise any legacy/incoming value.
+// Membership interest must match the leads CHECK constraint. Accepts either the
+// GHL dropdown label ("Lifestyle") or a code ("lifestyle"). Legacy 'signature'
+// and 'comprehensive' both fold into 'lifestyle' (2026-06 rename).
 function normalizeMembership(v: string | null | undefined): string | null {
   if (!v) return null
-  return v === 'comprehensive' ? 'signature' : v
+  const m = v.toString().trim().toLowerCase().replace(/\s+/g, '_')
+  if (m === 'comprehensive' || m === 'signature') return 'lifestyle'
+  const allowed = ['hakoah_one', 'lifestyle', 'fitness', 'wellness', 'teen', 'not_sure']
+  return allowed.includes(m) ? m : 'not_sure'
+}
+
+// GHL "Preferred Time" dropdown stores friendly labels ("Early Morning (5–8am)").
+// Map them to the codes the leads CHECK constraint + tribe trigger expect.
+function normalizePreferredTime(v: string | null | undefined): string | null {
+  if (!v) return null
+  const m = v.toString().trim().toLowerCase()
+  if (m.startsWith('early')) return 'early_morning'
+  if (m.startsWith('mid'))   return 'mid_morning'
+  if (m.startsWith('lunch')) return 'lunchtime'
+  if (m.startsWith('after')) return 'afternoon'
+  if (m.startsWith('even'))  return 'evening'
+  if (m.startsWith('week'))  return 'weekends'
+  const codes = ['early_morning', 'mid_morning', 'lunchtime', 'afternoon', 'evening', 'weekends']
+  return codes.includes(m) ? m : null
+}
+
+// Map an arbitrary UTM source onto the lead_source CHECK enum (defaults to 'other'
+// so an unexpected source never blocks the upsert).
+function normalizeLeadSource(utmSource: string | null | undefined): string {
+  if (!utmSource) return 'other'
+  const s = utmSource.toLowerCase()
+  if (/(meta|facebook|instagram|\bfb\b|\big\b)/.test(s)) return 'meta_paid'
+  if (s.includes('google'))                              return 'google_search'
+  if (s.includes('newsletter') || s.includes('hakoah'))  return 'hakoah_newsletter'
+  if (s.includes('referral'))                            return 'referral'
+  if (s.includes('organic') || s.includes('social'))     return 'organic_social'
+  if (s.includes('event'))                               return 'event'
+  return 'other'
 }
 
 function deriveGeneration(yob: number | null): string | null {
@@ -75,8 +111,8 @@ export async function POST(req: NextRequest) {
       ? parseInt(contact.customField.year_of_birth)
       : null
 
-    const preferredTime = contact.customField?.preferred_time ?? null
-    const track = contact.tags?.includes('community') ? 'community' : 'local'
+    const preferredTime = normalizePreferredTime(contact.customField?.preferred_time)
+    const track = contact.tags?.some((t: string) => t.includes('community')) ? 'community' : 'local'
     const stage = STAGE_MAP[contact.pipelineStage ?? ''] ?? 'awareness'
 
     const leadData = {
@@ -90,15 +126,15 @@ export async function POST(req: NextRequest) {
       generation:          deriveGeneration(yob),
       tribe:               deriveTribe(preferredTime),
       track,
-      is_hakoah_member:    contact.customField?.is_hakoah_member === 'true',
+      is_hakoah_member:    ['true', 'yes'].includes(String(contact.customField?.is_hakoah_member ?? '').toLowerCase()),
       stage,
       utm_source:          contact.attributionSource?.utmSource ?? null,
       utm_medium:          contact.attributionSource?.utmMedium ?? null,
       utm_campaign:        contact.attributionSource?.utmCampaign ?? null,
-      lead_source:         contact.attributionSource?.utmSource ?? 'other',
+      lead_source:         normalizeLeadSource(contact.attributionSource?.utmSource),
       ghl_contact_id:      contact.id,
       assigned_to:         contact.assignedTo ?? null,
-      membership_sold:     stage === 'sold' || stage === 'founding_member',
+      membership_sold:     stage === 'founding_member' || stage === 'member',
       tags:                contact.tags ?? [],
     }
 
