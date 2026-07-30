@@ -46,7 +46,7 @@ export default function LoginPage() {
         <div style={{ textAlign: 'center', fontSize: 11, letterSpacing: '0.22em', color: UI.textFaint, textTransform: 'uppercase', marginBottom: 6 }}>
           Pre-Opening Dashboard
         </div>
-        <div style={{ textAlign: 'center', fontFamily: 'DM Mono', fontSize: 9, letterSpacing: '0.2em', color: UI.textFaint, textTransform: 'uppercase', marginBottom: 30 }}>
+        <div style={{ textAlign: 'center', fontFamily: 'var(--mono)', fontSize: 9, letterSpacing: '0.2em', color: UI.textFaint, textTransform: 'uppercase', marginBottom: 30 }}>
           @ Hakoah Paddington
         </div>
 

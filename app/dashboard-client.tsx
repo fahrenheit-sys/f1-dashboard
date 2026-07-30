@@ -79,7 +79,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null
   return (
     <div style={{ background: UI.surface, border: `1px solid ${UI.border}`, borderRadius: 10, padding: '10px 14px', boxShadow: UI.shadow }}>
-      <div style={{ fontFamily: 'DM Mono', fontSize: 10, color: UI.textFaint, marginBottom: 4 }}>{label}</div>
+      <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: UI.textFaint, marginBottom: 4 }}>{label}</div>
       {payload.map((p: any, i: number) => (
         <div key={i} style={{ fontSize: 12, color: UI.text }}>
           <span style={{ color: p.color || UI.textMuted }}>●</span> {p.name}: <strong>{typeof p.value === 'number' ? p.value.toLocaleString() : p.value}</strong>
@@ -115,7 +115,7 @@ function KPICard({ label, value, sub, accent, progress, target }: {
               background: accent === 'community' ? BRAND.community : accent === 'local' ? BRAND.local : accent === 'accent' ? BRAND.accent : BRAND.neutral
             }} />
           </div>
-          {target && <div style={{ fontSize: 10, color: UI.textFaint, marginTop: 5, fontFamily: 'DM Mono' }}>{Math.round(progress ?? 0)}% of {target} target</div>}
+          {target && <div style={{ fontSize: 10, color: UI.textFaint, marginTop: 5, fontFamily: 'var(--mono)' }}>{Math.round(progress ?? 0)}% of {target} target</div>}
         </div>
       )}
     </div>
@@ -140,8 +140,8 @@ function DimBar({ label, value, total, color, sold }: { label: string; value: nu
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
         <span style={{ fontSize: 12.5, color: UI.text }}>{label}</span>
         <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-          {sold !== undefined && <span style={{ fontSize: 10, color: ACCENT_TEXT, fontFamily: 'DM Mono' }}>{sold} sold</span>}
-          <span style={{ fontSize: 12, color: UI.textMuted, fontFamily: 'DM Mono' }}>{value} <span style={{ opacity: 0.6 }}>({pct(value, total)}%)</span></span>
+          {sold !== undefined && <span style={{ fontSize: 10, color: ACCENT_TEXT, fontFamily: 'var(--mono)' }}>{sold} sold</span>}
+          <span style={{ fontSize: 12, color: UI.textMuted, fontFamily: 'var(--mono)' }}>{value} <span style={{ opacity: 0.6 }}>({pct(value, total)}%)</span></span>
         </div>
       </div>
       <div className="progress-bar">
@@ -393,9 +393,9 @@ function MarketingPerformance({ stats }: { stats: Stats }) {
             {srcData.map(row => (
               <tr key={row.name}>
                 <td style={{ fontWeight: 500, color: UI.text }}>{row.name}</td>
-                <td style={{ fontFamily: 'DM Mono', fontSize: 12 }}>{row.leads}</td>
-                <td style={{ fontFamily: 'DM Mono', fontSize: 12, color: ACCENT_TEXT }}>{row.sold}</td>
-                <td style={{ fontFamily: 'DM Mono', fontSize: 12, color: row.conv > 15 ? ACCENT_TEXT : row.conv > 8 ? UI.text : UI.textFaint }}>{row.conv}%</td>
+                <td style={{ fontFamily: 'var(--mono)', fontSize: 12 }}>{row.leads}</td>
+                <td style={{ fontFamily: 'var(--mono)', fontSize: 12, color: ACCENT_TEXT }}>{row.sold}</td>
+                <td style={{ fontFamily: 'var(--mono)', fontSize: 12, color: row.conv > 15 ? ACCENT_TEXT : row.conv > 8 ? UI.text : UI.textFaint }}>{row.conv}%</td>
                 <td>
                   <span className="track-pill community" style={{ marginRight: 4 }}>C</span>
                   <span className="track-pill local">L</span>
@@ -441,7 +441,7 @@ function MarketIntelligence({ stats, membershipLabels }: { stats: Stats; members
   const pill = (active: boolean): CSSProperties => ({
     padding: '7px 16px', borderRadius: 999, border: `1px solid ${active ? BRAND.plum : UI.borderStrong}`,
     background: active ? BRAND.plum : UI.surface, color: active ? '#fff' : UI.textMuted,
-    cursor: 'pointer', fontSize: 12, fontFamily: 'DM Mono', letterSpacing: '0.04em', textTransform: 'uppercase',
+    cursor: 'pointer', fontSize: 12, fontFamily: 'var(--mono)', letterSpacing: '0.04em', textTransform: 'uppercase',
   })
 
   return (
@@ -520,7 +520,7 @@ function CrossAnalysis({ stats, membershipLabels, products }: { stats: Stats; me
   const pill = (active: boolean): CSSProperties => ({
     padding: '6px 14px', borderRadius: 999, border: `1px solid ${active ? BRAND.plum : UI.borderStrong}`,
     background: active ? BRAND.plum : UI.surface, color: active ? '#fff' : UI.textMuted,
-    cursor: 'pointer', fontSize: 12, fontFamily: 'DM Mono', textTransform: 'uppercase',
+    cursor: 'pointer', fontSize: 12, fontFamily: 'var(--mono)', textTransform: 'uppercase',
   })
 
   return (
@@ -570,13 +570,13 @@ function CrossAnalysis({ stats, membershipLabels, products }: { stats: Stats; me
                             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                             width: 38, height: 28, borderRadius: 6,
                             background: v ? rampStep(PLUM_SEQUENTIAL, intensity) : 'transparent',
-                            fontFamily: 'DM Mono', fontSize: 12,
+                            fontFamily: 'var(--mono)', fontSize: 12,
                             color: !v ? UI.textFaint : intensity > 0.4 ? '#fff' : UI.text
                           }}>{v || '—'}</div>
                         </td>
                       )
                     })}
-                    <td style={{ textAlign: 'center', fontWeight: 600, fontFamily: 'DM Mono', color: ACCENT_TEXT }}>{row.total}</td>
+                    <td style={{ textAlign: 'center', fontWeight: 600, fontFamily: 'var(--mono)', color: ACCENT_TEXT }}>{row.total}</td>
                   </tr>
                 )
               })}
@@ -644,13 +644,13 @@ function SalesPerformance({ stats }: { stats: Stats }) {
             {consultants.map(c => (
               <tr key={c.name}>
                 <td style={{ fontWeight: 600, color: UI.text }}>{c.name}</td>
-                <td style={{ fontFamily: 'DM Mono', fontSize: 12 }}>{c.assigned}</td>
-                <td style={{ fontFamily: 'DM Mono', fontSize: 12 }}>{c.contacted}</td>
-                <td style={{ fontFamily: 'DM Mono', fontSize: 12 }}>{c.conversations}</td>
-                <td style={{ fontFamily: 'DM Mono', fontSize: 12 }}>{c.tours}</td>
-                <td style={{ fontFamily: 'DM Mono', fontSize: 12, color: ACCENT_TEXT, fontWeight: 600 }}>{c.sold}</td>
-                <td style={{ fontFamily: 'DM Mono', fontSize: 12, color: UI.text }}>{pct(c.sold, c.assigned)}%</td>
-                <td style={{ fontFamily: 'DM Mono', fontSize: 12 }}>{fmtMRR(c.revenue)}/mo</td>
+                <td style={{ fontFamily: 'var(--mono)', fontSize: 12 }}>{c.assigned}</td>
+                <td style={{ fontFamily: 'var(--mono)', fontSize: 12 }}>{c.contacted}</td>
+                <td style={{ fontFamily: 'var(--mono)', fontSize: 12 }}>{c.conversations}</td>
+                <td style={{ fontFamily: 'var(--mono)', fontSize: 12 }}>{c.tours}</td>
+                <td style={{ fontFamily: 'var(--mono)', fontSize: 12, color: ACCENT_TEXT, fontWeight: 600 }}>{c.sold}</td>
+                <td style={{ fontFamily: 'var(--mono)', fontSize: 12, color: UI.text }}>{pct(c.sold, c.assigned)}%</td>
+                <td style={{ fontFamily: 'var(--mono)', fontSize: 12 }}>{fmtMRR(c.revenue)}/mo</td>
               </tr>
             ))}
           </tbody>
@@ -665,11 +665,11 @@ function SalesPerformance({ stats }: { stats: Stats }) {
             const h = maxVal > 0 ? (d.count / maxVal) * 160 : 0
             return (
               <div key={d.stage} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-                <div style={{ fontFamily: 'DM Mono', fontSize: 11, color: ACCENT_TEXT }}>{d.count}</div>
+                <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: ACCENT_TEXT }}>{d.count}</div>
                 {/* Funnel position is ordinal — one hue, stepping lighter as the
                     pipeline narrows, so the order reads in the colour. */}
                 <div style={{ width: '78%', height: h, background: PLUM_ORDINAL[Math.min(i, PLUM_ORDINAL.length - 1)], borderRadius: '4px 4px 0 0', minHeight: 4 }} />
-                <div style={{ fontSize: 9, fontFamily: 'DM Mono', color: UI.textFaint, textAlign: 'center', letterSpacing: '0.04em' }}>{d.stage}</div>
+                <div style={{ fontSize: 9, fontFamily: 'var(--mono)', color: UI.textFaint, textAlign: 'center', letterSpacing: '0.04em' }}>{d.stage}</div>
               </div>
             )
           })}
@@ -700,21 +700,21 @@ function MembershipIntelligence({ stats, products }: { stats: Stats; products: P
                   </span>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontFamily: 'DM Mono', fontSize: 18, color: ACCENT_TEXT, fontWeight: 600 }}>${p.rate}<span style={{ fontSize: 10, opacity: 0.6 }}>/mo</span></div>
+                  <div style={{ fontFamily: 'var(--mono)', fontSize: 18, color: ACCENT_TEXT, fontWeight: 600 }}>${p.rate}<span style={{ fontSize: 10, opacity: 0.6 }}>/mo</span></div>
                 </div>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 12 }}>
                 {[['Leads', leads], ['Sold', sold], ['Conv %', `${convR.toFixed(1)}%`]].map(([l, v]) => (
                   <div key={l as string} style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: 18, fontFamily: 'DM Mono', color: UI.text, fontWeight: 600 }}>{v}</div>
-                    <div style={{ fontSize: 9, fontFamily: 'DM Mono', color: UI.textFaint, letterSpacing: '0.1em' }}>{l}</div>
+                    <div style={{ fontSize: 18, fontFamily: 'var(--mono)', color: UI.text, fontWeight: 600 }}>{v}</div>
+                    <div style={{ fontSize: 9, fontFamily: 'var(--mono)', color: UI.textFaint, letterSpacing: '0.1em' }}>{l}</div>
                   </div>
                 ))}
               </div>
               <div className="progress-bar">
                 <div className="progress-fill" style={{ width: `${Math.min(progress, 100)}%`, background: color }} />
               </div>
-              <div style={{ fontSize: 10, fontFamily: 'DM Mono', color: UI.textFaint, marginTop: 5 }}>
+              <div style={{ fontSize: 10, fontFamily: 'var(--mono)', color: UI.textFaint, marginTop: 5 }}>
                 {sold} of {p.target} target
               </div>
             </div>
@@ -762,15 +762,15 @@ function OpeningReadiness({ stats, milestones }: { stats: Stats; milestones: Mil
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
                   <span style={{ fontSize: 12.5, color: UI.text }}>{t.name}</span>
                   <div style={{ display: 'flex', gap: 10 }}>
-                    <span style={{ fontSize: 10, fontFamily: 'DM Mono', color: ACCENT_TEXT }}>{t.members} members</span>
-                    <span style={{ fontSize: 10, fontFamily: 'DM Mono', color: UI.textFaint }}>{t.demand} interested</span>
+                    <span style={{ fontSize: 10, fontFamily: 'var(--mono)', color: ACCENT_TEXT }}>{t.members} members</span>
+                    <span style={{ fontSize: 10, fontFamily: 'var(--mono)', color: UI.textFaint }}>{t.demand} interested</span>
                   </div>
                 </div>
                 <div className="progress-bar">
                   <div className="progress-fill" style={{ width: `${(t.members / Math.max(...tribeCapacity.map(x => x.members), 1)) * 100}%`, background: t.color }} />
                 </div>
                 {t.members > 40 && (
-                  <div style={{ fontSize: 10, color: BRAND.clayDeep, fontFamily: 'DM Mono', marginTop: 3 }}>⚠ High demand — check capacity</div>
+                  <div style={{ fontSize: 10, color: BRAND.clayDeep, fontFamily: 'var(--mono)', marginTop: 3 }}>⚠ High demand — check capacity</div>
                 )}
               </div>
             ))}
@@ -808,7 +808,7 @@ function OpeningReadiness({ stats, milestones }: { stats: Stats; milestones: Mil
                   <span style={{ fontSize: 13, color: m.done ? UI.text : UI.textMuted }}>{m.name}</span>
                   <span className={`track-pill ${m.track}`}>{m.track === 'community' ? 'Community' : m.track === 'local' ? 'Local' : 'Both'}</span>
                 </div>
-                <span style={{ fontFamily: 'DM Mono', fontSize: 11, color: m.done ? ACCENT_TEXT : UI.textFaint }}>{m.date}</span>
+                <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: m.done ? ACCENT_TEXT : UI.textFaint }}>{m.date}</span>
               </div>
             </div>
           ))}
@@ -847,12 +847,12 @@ export default function Dashboard({ stats, user, config }: { stats: Stats; user:
     <div style={{ display: 'flex', minHeight: '100vh' }}>
       {/* Sidebar */}
       <aside className="sidebar on-plum">
-        <div style={{ padding: '24px 20px 18px', borderBottom: `1px solid ${UI.plumLine}` }}>
+        <div style={{ padding: '26px 20px 20px', borderBottom: `1px solid ${UI.plumLine}` }}>
           {/* Cream wordmark — the clay one disappears against the plum chrome */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/f1-wordmark-cream.png" alt="Fahrenheit One" style={{ height: 30, width: 'auto', display: 'block' }} />
-          <div style={{ fontFamily: 'DM Mono', fontSize: 9, color: UI.onPlumFaint, letterSpacing: '0.18em', marginTop: 8 }}>@ HAKOAH PADDINGTON</div>
-          <div style={{ display: 'flex', gap: 6, marginTop: 12 }}>
+          <img src="/f1-wordmark-cream.png" alt="Fahrenheit One" style={{ height: 46, width: 'auto', display: 'block' }} />
+          <div style={{ fontSize: 10, fontWeight: 600, color: '#FFFFFF', letterSpacing: '0.16em', marginTop: 10 }}>@ HAKOAH PADDINGTON</div>
+          <div style={{ display: 'flex', gap: 6, marginTop: 14 }}>
             <span className="track-pill community">Community</span>
             <span className="track-pill local">Local</span>
           </div>
@@ -881,16 +881,16 @@ export default function Dashboard({ stats, user, config }: { stats: Stats; user:
 
         <div style={{ padding: '12px 16px', borderTop: `1px solid ${UI.plumLine}`, background: 'rgba(0,0,0,0.18)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-            <span style={{ fontFamily: 'DM Mono', fontSize: 9, color: UI.onPlumFaint }}>TOTAL LEADS</span>
-            <span style={{ fontFamily: 'DM Mono', fontSize: 11, color: UI.onPlum }}>{stats.total}</span>
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: UI.onPlumFaint }}>TOTAL LEADS</span>
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: UI.onPlum }}>{stats.total}</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-            <span style={{ fontFamily: 'DM Mono', fontSize: 9, color: UI.onPlumFaint }}>MEMBERS</span>
-            <span style={{ fontFamily: 'DM Mono', fontSize: 11, color: BRAND.clayText }}>{stats.sold}</span>
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: UI.onPlumFaint }}>MEMBERS</span>
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: BRAND.clayText }}>{stats.sold}</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ fontFamily: 'DM Mono', fontSize: 9, color: UI.onPlumFaint }}>DAYS TO OPEN</span>
-            <span style={{ fontFamily: 'DM Mono', fontSize: 11, color: UI.onPlum }}>{stats.daysToOpen}</span>
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: UI.onPlumFaint }}>DAYS TO OPEN</span>
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: UI.onPlum }}>{stats.daysToOpen}</span>
           </div>
         </div>
       </aside>
@@ -900,14 +900,14 @@ export default function Dashboard({ stats, user, config }: { stats: Stats; user:
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 32px', borderBottom: `1px solid ${UI.border}`, background: 'rgba(255,255,255,0.82)', backdropFilter: 'blur(12px)', position: 'sticky', top: 0, zIndex: 40 }}>
           <div>
             <div className="serif" style={{ fontSize: 20, color: UI.text }}>{visibleNav.find(n => n.id === section)?.label}</div>
-            <div style={{ fontFamily: 'DM Mono', fontSize: 9, color: UI.textFaint, letterSpacing: '0.16em', marginTop: 1 }}>
+            <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: UI.textFaint, letterSpacing: '0.16em', marginTop: 1 }}>
               PRE-OPENING INTELLIGENCE · {new Date().toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' }).toUpperCase()}
             </div>
           </div>
           <div style={{ display: 'flex', gap: 18, alignItems: 'center' }}>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontFamily: 'DM Mono', fontSize: 9, color: UI.textFaint }}>OPENING TARGET</div>
-              <div style={{ fontFamily: 'DM Mono', fontSize: 13, color: ACCENT_TEXT }}>{stats.sold} / {stats.targetTotal} members</div>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: UI.textFaint }}>OPENING TARGET</div>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: 13, color: ACCENT_TEXT }}>{stats.sold} / {stats.targetTotal} members</div>
             </div>
             <div style={{ width: 80 }}>
               <div className="progress-bar">
@@ -918,7 +918,7 @@ export default function Dashboard({ stats, user, config }: { stats: Stats; user:
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <div style={{ textAlign: 'right' }}>
                 <div style={{ fontSize: 12.5, color: UI.text, fontWeight: 500 }}>{user.email}</div>
-                <div style={{ fontFamily: 'DM Mono', fontSize: 9, color: UI.textFaint, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{user.role}</div>
+                <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: UI.textFaint, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{user.role}</div>
               </div>
               {isAdmin && (
                 <a href="https://clubf1.tech/admin" title="Manage team access"
