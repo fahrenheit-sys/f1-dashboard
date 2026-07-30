@@ -14,10 +14,27 @@ import { UI } from '@/lib/theme'
 import {
   GENERATION_LABELS, TRIBE_LABELS,
   SOURCE_LABELS, STAGE_LABELS, GENERATION_COLORS,
-  TRIBE_COLORS, MEMBERSHIP_COLORS, BRAND
+  TRIBE_COLORS, MEMBERSHIP_COLORS, BRAND,
+  PLUM_SEQUENTIAL, PLUM_ORDINAL, GENERATION_ORDER, TRIBE_ORDER,
 } from '@/lib/constants'
 
-const GOLD_TEXT = '#9A6A0F' // darker gold for small text on white
+// Clay stepped down so it clears 4.5:1 as small text on a light surface.
+const ACCENT_TEXT = BRAND.accentText
+
+// Order a dimension by its canonical sequence (generations oldest→youngest,
+// tribes through the day) rather than by value, so neighbouring bars and donut
+// slices are always the pairs the palette was validated against.
+function byOrder<T extends { key: string }>(rows: T[], order: string[]): T[] {
+  return [...rows].sort((a, b) => {
+    const ia = order.indexOf(a.key), ib = order.indexOf(b.key)
+    return (ia < 0 ? order.length : ia) - (ib < 0 ? order.length : ib)
+  })
+}
+
+// Pick a step from a magnitude ramp for a 0–1 intensity.
+function rampStep(ramp: readonly string[], intensity: number) {
+  return ramp[Math.min(ramp.length - 1, Math.max(0, Math.round(intensity * (ramp.length - 1))))]
+}
 
 // ── Icons ─────────────────────────────────────────────────
 const Icon = ({ d, size = 16 }: { d: string; size?: number }) => (
@@ -75,23 +92,27 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 const AXIS_TICK = { fill: UI.textFaint, fontSize: 10 }
 const AXIS_TICK_STRONG = { fill: UI.textMuted, fontSize: 11 }
 
+// Legend labels wear text tokens, never the series colour — the swatch beside
+// them already carries identity.
+const legendLabel = (v: string) => <span style={{ fontSize: 11, color: UI.textMuted }}>{v}</span>
+
 // ── KPI Card ──────────────────────────────────────────────
 function KPICard({ label, value, sub, accent, progress, target }: {
   label: string; value: string; sub?: string
-  accent?: 'community' | 'local' | 'gold' | 'neutral'
+  accent?: 'community' | 'local' | 'accent' | 'neutral'
   progress?: number; target?: string
 }) {
   return (
     <div className={`kpi-card ${accent ?? 'neutral'}`}>
       <div className="mono" style={{ fontSize: 9, letterSpacing: '0.18em', color: UI.textFaint, textTransform: 'uppercase', marginBottom: 10 }}>{label}</div>
-      <div className="serif" style={{ fontSize: 32, fontWeight: 600, color: UI.text, lineHeight: 1 }}>{value}</div>
+      <div className="serif" style={{ fontSize: 34, fontWeight: 500, color: UI.text, lineHeight: 1 }}>{value}</div>
       {sub && <div style={{ fontSize: 11.5, color: UI.textMuted, marginTop: 6 }}>{sub}</div>}
       {progress !== undefined && (
         <div style={{ marginTop: 12 }}>
           <div className="progress-bar">
             <div className="progress-fill" style={{
               width: `${Math.min(progress, 100)}%`,
-              background: accent === 'community' ? BRAND.greenMid : accent === 'local' ? BRAND.terra : accent === 'gold' ? BRAND.gold : BRAND.slate
+              background: accent === 'community' ? BRAND.community : accent === 'local' ? BRAND.local : accent === 'accent' ? BRAND.accent : BRAND.neutral
             }} />
           </div>
           {target && <div style={{ fontSize: 10, color: UI.textFaint, marginTop: 5, fontFamily: 'DM Mono' }}>{Math.round(progress ?? 0)}% of {target} target</div>}
@@ -105,7 +126,7 @@ function KPICard({ label, value, sub, accent, progress, target }: {
 function SectionHead({ title, sub }: { title: string; sub?: string }) {
   return (
     <div style={{ marginBottom: 22 }}>
-      <div className="serif" style={{ fontSize: 24, fontWeight: 600, color: UI.text }}>{title}</div>
+      <div className="serif" style={{ fontSize: 27, fontWeight: 400, color: UI.text }}>{title}</div>
       {sub && <div style={{ fontSize: 13, color: UI.textMuted, marginTop: 4 }}>{sub}</div>}
     </div>
   )
@@ -119,7 +140,7 @@ function DimBar({ label, value, total, color, sold }: { label: string; value: nu
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
         <span style={{ fontSize: 12.5, color: UI.text }}>{label}</span>
         <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-          {sold !== undefined && <span style={{ fontSize: 10, color: GOLD_TEXT, fontFamily: 'DM Mono' }}>{sold} sold</span>}
+          {sold !== undefined && <span style={{ fontSize: 10, color: ACCENT_TEXT, fontFamily: 'DM Mono' }}>{sold} sold</span>}
           <span style={{ fontSize: 12, color: UI.textMuted, fontFamily: 'DM Mono' }}>{value} <span style={{ opacity: 0.6 }}>({pct(value, total)}%)</span></span>
         </div>
       </div>
@@ -160,7 +181,7 @@ function AddLeadModal({ onClose, products }: { onClose: () => void; products: Pr
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(2px)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ background: UI.surface, border: `1px solid ${UI.border}`, borderRadius: UI.radius, padding: 30, width: 480, maxHeight: '90vh', overflowY: 'auto', boxShadow: UI.shadow }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 22 }}>
-          <div className="serif" style={{ fontSize: 21, fontWeight: 600, color: UI.text }}>Add New Lead</div>
+          <div className="serif" style={{ fontSize: 23, fontWeight: 500, color: UI.text }}>Add New Lead</div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: UI.textFaint, cursor: 'pointer', fontSize: 22, lineHeight: 1 }}>×</button>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -210,14 +231,14 @@ function AddLeadModal({ onClose, products }: { onClose: () => void; products: Pr
           </div>
         </div>
         {error && (
-          <div style={{ marginTop: 16, padding: '10px 12px', background: '#FFF1EF', border: `1px solid ${BRAND.brick}`, borderRadius: UI.radiusSm, fontSize: 12.5, color: BRAND.terra }}>
+          <div style={{ marginTop: 16, padding: '10px 12px', background: '#FBEFE9', border: `1px solid ${BRAND.clay}`, borderRadius: UI.radiusSm, fontSize: 12.5, color: BRAND.clayDeep }}>
             {error}
           </div>
         )}
         <div style={{ display: 'flex', gap: 10, marginTop: 22 }}>
           <button onClick={onClose} disabled={pending} style={{ flex: 1, padding: '11px', background: UI.surface, border: `1px solid ${UI.borderStrong}`, borderRadius: UI.radiusSm, color: UI.textMuted, cursor: pending ? 'default' : 'pointer', fontSize: 13.5 }}>Cancel</button>
           <button onClick={submit} disabled={pending}
-            style={{ flex: 2, padding: '11px', background: BRAND.forest, border: 'none', borderRadius: UI.radiusSm, color: '#fff', cursor: pending ? 'default' : 'pointer', fontSize: 13.5, fontWeight: 600, opacity: pending ? 0.6 : 1 }}>
+            style={{ flex: 2, padding: '11px', background: BRAND.clayHover, border: 'none', borderRadius: UI.radiusSm, color: '#fff', cursor: pending ? 'default' : 'pointer', fontSize: 13.5, fontWeight: 600, opacity: pending ? 0.6 : 1 }}>
             {pending ? 'Adding…' : 'Add to Pipeline'}
           </button>
         </div>
@@ -247,9 +268,9 @@ function ExecutiveOverview({ stats }: { stats: Stats }) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 14 }}>
         <KPICard label="Total Leads" value={fmt(stats.total)} sub="All tracks combined" accent="neutral"
           progress={(stats.total / 1000) * 100} target="1,000" />
-        <KPICard label="Founding Members" value={fmt(stats.sold)} sub="Agreements signed" accent="gold"
+        <KPICard label="Founding Members" value={fmt(stats.sold)} sub="Agreements signed" accent="accent"
           progress={(stats.sold / stats.targetTotal) * 100} target={fmt(stats.targetTotal)} />
-        <KPICard label="Projected MRR" value={fmtMRR(stats.mrr)} sub="At founding rates" accent="gold" />
+        <KPICard label="Projected MRR" value={fmtMRR(stats.mrr)} sub="At founding rates" accent="accent" />
         <KPICard label="Days to Opening" value={fmt(stats.daysToOpen)} sub="April 2027" accent="neutral" />
       </div>
 
@@ -271,12 +292,11 @@ function ExecutiveOverview({ stats }: { stats: Stats }) {
             <BarChart data={stageData} layout="vertical">
               <XAxis type="number" tick={AXIS_TICK} axisLine={false} tickLine={false} />
               <YAxis type="category" dataKey="name" tick={AXIS_TICK_STRONG} axisLine={false} tickLine={false} width={100} />
-              <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(0,0,0,0.04)' }} />
-              <Bar dataKey="value" radius={[0, 3, 3, 0]}>
-                {stageData.map((_, i) => (
-                  <Cell key={i} fill={i === 0 ? BRAND.greenMid : i === 1 ? '#4A7A80' : i === 2 ? BRAND.gold : BRAND.slate} />
-                ))}
-              </Bar>
+              <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(42,24,48,0.05)' }} />
+              {/* One series — bar length already encodes magnitude, so a single
+                  hue does the job. Colouring by rank would spend the identity
+                  channel re-saying what the bars say. */}
+              <Bar dataKey="value" fill={BRAND.community} radius={[0, 3, 3, 0]} name="Leads" isAnimationActive={false} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -289,8 +309,9 @@ function ExecutiveOverview({ stats }: { stats: Stats }) {
               <XAxis dataKey="week" tick={AXIS_TICK} axisLine={false} tickLine={false} />
               <YAxis tick={AXIS_TICK} axisLine={false} tickLine={false} />
               <Tooltip content={<CustomTooltip />} />
-              <Line type="monotone" dataKey="leads" stroke={BRAND.greenMid} strokeWidth={2.5} dot={false} name="Leads" />
-              <Line type="monotone" dataKey="sold" stroke={BRAND.gold} strokeWidth={2.5} dot={false} name="Sold" />
+              <Legend iconType="plainline" iconSize={12} formatter={legendLabel} />
+              <Line type="monotone" dataKey="leads" stroke={BRAND.community} strokeWidth={2} dot={false} name="Leads" isAnimationActive={false} />
+              <Line type="monotone" dataKey="sold" stroke={BRAND.accent} strokeWidth={2} dot={false} name="Sold" isAnimationActive={false} />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -299,20 +320,20 @@ function ExecutiveOverview({ stats }: { stats: Stats }) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14, marginTop: 14 }}>
         <div className="card">
           <div className="mono" style={{ fontSize: 9, letterSpacing: '0.18em', color: UI.textFaint, marginBottom: 8 }}>OVERALL CONVERSION</div>
-          <div className="serif" style={{ fontSize: 36, color: GOLD_TEXT, fontWeight: 600 }}>{stats.convRate.toFixed(1)}%</div>
+          <div className="serif" style={{ fontSize: 38, color: ACCENT_TEXT, fontWeight: 500 }}>{stats.convRate.toFixed(1)}%</div>
           <div style={{ fontSize: 11.5, color: UI.textMuted, marginTop: 4 }}>Lead → Founding Member</div>
         </div>
         <div className="card">
           <div className="mono" style={{ fontSize: 9, letterSpacing: '0.18em', color: UI.textFaint, marginBottom: 8 }}>OPENING DAY PROGRESS</div>
-          <div className="serif" style={{ fontSize: 36, color: UI.text, fontWeight: 600 }}>{pct(stats.sold, stats.targetTotal)}%</div>
+          <div className="serif" style={{ fontSize: 38, color: UI.text, fontWeight: 500 }}>{pct(stats.sold, stats.targetTotal)}%</div>
           <div className="progress-bar" style={{ marginTop: 10 }}>
-            <div className="progress-fill" style={{ width: `${Math.min((stats.sold / stats.targetTotal) * 100, 100)}%`, background: `linear-gradient(90deg, ${BRAND.greenMid}, ${BRAND.gold})` }} />
+            <div className="progress-fill" style={{ width: `${Math.min((stats.sold / stats.targetTotal) * 100, 100)}%`, background: `linear-gradient(90deg, ${BRAND.community}, ${BRAND.accent})` }} />
           </div>
           <div style={{ fontSize: 11.5, color: UI.textMuted, marginTop: 6 }}>{fmt(stats.sold)} of {fmt(stats.targetTotal)} target members</div>
         </div>
         <div className="card">
           <div className="mono" style={{ fontSize: 9, letterSpacing: '0.18em', color: UI.textFaint, marginBottom: 8 }}>PROJECTED ANNUAL REVENUE</div>
-          <div className="serif" style={{ fontSize: 36, color: UI.text, fontWeight: 600 }}>{fmtMRR(stats.mrr * 12)}</div>
+          <div className="serif" style={{ fontSize: 38, color: UI.text, fontWeight: 500 }}>{fmtMRR(stats.mrr * 12)}</div>
           <div style={{ fontSize: 11.5, color: UI.textMuted, marginTop: 4 }}>Based on founding member MRR × 12</div>
         </div>
       </div>
@@ -339,9 +360,10 @@ function MarketingPerformance({ stats }: { stats: Stats }) {
               <CartesianGrid stroke={UI.border} vertical={false} />
               <XAxis dataKey="name" tick={{ fill: UI.textFaint, fontSize: 9 }} axisLine={false} tickLine={false} angle={-35} textAnchor="end" height={60} />
               <YAxis tick={AXIS_TICK} axisLine={false} tickLine={false} />
-              <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(0,0,0,0.04)' }} />
-              <Bar dataKey="leads" fill={BRAND.greenMid} radius={[3, 3, 0, 0]} name="Leads" />
-              <Bar dataKey="sold" fill={BRAND.gold} radius={[3, 3, 0, 0]} name="Sold" />
+              <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(42,24,48,0.05)' }} />
+              <Legend iconType="circle" iconSize={8} formatter={legendLabel} />
+              <Bar dataKey="leads" fill={BRAND.community} radius={[3, 3, 0, 0]} name="Leads" isAnimationActive={false} />
+              <Bar dataKey="sold" fill={BRAND.accent} radius={[3, 3, 0, 0]} name="Sold" isAnimationActive={false} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -351,10 +373,10 @@ function MarketingPerformance({ stats }: { stats: Stats }) {
             <BarChart data={srcData} layout="vertical">
               <XAxis type="number" tick={AXIS_TICK} axisLine={false} tickLine={false} unit="%" />
               <YAxis type="category" dataKey="name" tick={{ fill: UI.textMuted, fontSize: 10 }} axisLine={false} tickLine={false} width={120} />
-              <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(0,0,0,0.04)' }} />
-              <Bar dataKey="conv" radius={[0, 3, 3, 0]} name="Conv %" >
-                {srcData.map((d, i) => <Cell key={i} fill={d.conv > 15 ? BRAND.gold : d.conv > 8 ? BRAND.greenMid : BRAND.slate} />)}
-              </Bar>
+              <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(42,24,48,0.05)' }} />
+              {/* Single hue — bar length is the rate. The SIGNAL column in the
+                  table below carries the high/on-target/review call as text. */}
+              <Bar dataKey="conv" fill={BRAND.accent} radius={[0, 3, 3, 0]} name="Conv %" isAnimationActive={false} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -372,13 +394,13 @@ function MarketingPerformance({ stats }: { stats: Stats }) {
               <tr key={row.name}>
                 <td style={{ fontWeight: 500, color: UI.text }}>{row.name}</td>
                 <td style={{ fontFamily: 'DM Mono', fontSize: 12 }}>{row.leads}</td>
-                <td style={{ fontFamily: 'DM Mono', fontSize: 12, color: GOLD_TEXT }}>{row.sold}</td>
-                <td style={{ fontFamily: 'DM Mono', fontSize: 12, color: row.conv > 15 ? BRAND.greenMid : row.conv > 8 ? GOLD_TEXT : UI.textFaint }}>{row.conv}%</td>
+                <td style={{ fontFamily: 'DM Mono', fontSize: 12, color: ACCENT_TEXT }}>{row.sold}</td>
+                <td style={{ fontFamily: 'DM Mono', fontSize: 12, color: row.conv > 15 ? ACCENT_TEXT : row.conv > 8 ? UI.text : UI.textFaint }}>{row.conv}%</td>
                 <td>
                   <span className="track-pill community" style={{ marginRight: 4 }}>C</span>
                   <span className="track-pill local">L</span>
                 </td>
-                <td style={{ fontSize: 11, color: row.conv > 15 ? BRAND.greenMid : UI.textMuted }}>
+                <td style={{ fontSize: 11, color: row.conv > 15 ? ACCENT_TEXT : UI.textMuted }}>
                   {row.conv > 15 ? '↑ High performer' : row.conv > 8 ? '→ On target' : '↓ Review'}
                 </td>
               </tr>
@@ -393,29 +415,32 @@ function MarketingPerformance({ stats }: { stats: Stats }) {
 function MarketIntelligence({ stats, membershipLabels }: { stats: Stats; membershipLabels: Record<string, string> }) {
   const [lens, setLens] = useState<'generation' | 'tribe' | 'membership'>('generation')
 
-  const genData  = Object.entries(stats.byGen).map(([k, v]) => ({
-    name: GENERATION_LABELS[k] ?? k, value: v,
+  // Rendered in canonical order (generations oldest→youngest, tribes through
+  // the day) rather than by value, so a colour always belongs to the same entity
+  // and neighbouring slices are the pairs the palette was validated against.
+  const genData  = byOrder(Object.entries(stats.byGen).map(([k, v]) => ({
+    key: k, name: GENERATION_LABELS[k] ?? k, value: v,
     sold: stats.soldByGen[k] ?? 0,
-    color: GENERATION_COLORS[k] ?? BRAND.slate,
-  })).sort((a, b) => b.value - a.value)
+    color: GENERATION_COLORS[k] ?? BRAND.neutral,
+  })), GENERATION_ORDER)
 
-  const tribeData = Object.entries(stats.byTribe).map(([k, v]) => ({
-    name: TRIBE_LABELS[k] ?? k, value: v,
+  const tribeData = byOrder(Object.entries(stats.byTribe).map(([k, v]) => ({
+    key: k, name: TRIBE_LABELS[k] ?? k, value: v,
     sold: stats.soldByTribe[k] ?? 0,
-    color: TRIBE_COLORS[k] ?? BRAND.slate,
-  })).sort((a, b) => b.value - a.value)
+    color: TRIBE_COLORS[k] ?? BRAND.neutral,
+  })), TRIBE_ORDER)
 
   const memData = Object.entries(stats.byMem).map(([k, v]) => ({
-    name: membershipLabels[k] ?? k, value: v,
+    key: k, name: membershipLabels[k] ?? k, value: v,
     sold: stats.soldByMem[k] ?? 0,
-    color: MEMBERSHIP_COLORS[k] ?? BRAND.slate,
+    color: MEMBERSHIP_COLORS[k] ?? BRAND.neutral,
   })).sort((a, b) => b.value - a.value)
 
   const activeData = lens === 'generation' ? genData : lens === 'tribe' ? tribeData : memData
 
   const pill = (active: boolean): CSSProperties => ({
-    padding: '7px 16px', borderRadius: 999, border: `1px solid ${active ? BRAND.forest : UI.borderStrong}`,
-    background: active ? BRAND.forest : UI.surface, color: active ? '#fff' : UI.textMuted,
+    padding: '7px 16px', borderRadius: 999, border: `1px solid ${active ? BRAND.plum : UI.borderStrong}`,
+    background: active ? BRAND.plum : UI.surface, color: active ? '#fff' : UI.textMuted,
     cursor: 'pointer', fontSize: 12, fontFamily: 'DM Mono', letterSpacing: '0.04em', textTransform: 'uppercase',
   })
 
@@ -438,11 +463,11 @@ function MarketIntelligence({ stats, membershipLabels }: { stats: Stats; members
           </div>
           <ResponsiveContainer width="100%" height={240}>
             <PieChart>
-              <Pie data={activeData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} innerRadius={52} paddingAngle={1.5}>
+              <Pie data={activeData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} innerRadius={52} paddingAngle={1.5} isAnimationActive={false}>
                 {activeData.map((d, i) => <Cell key={i} fill={d.color} stroke={UI.surface} strokeWidth={2} />)}
               </Pie>
               <Tooltip content={<CustomTooltip />} />
-              <Legend iconType="circle" iconSize={8} formatter={(v) => <span style={{ fontSize: 11, color: UI.textMuted }}>{v}</span>} />
+              <Legend iconType="circle" iconSize={8} formatter={legendLabel} />
             </PieChart>
           </ResponsiveContainer>
         </div>
@@ -466,9 +491,10 @@ function MarketIntelligence({ stats, membershipLabels }: { stats: Stats; members
             <CartesianGrid stroke={UI.border} vertical={false} />
             <XAxis dataKey="name" tick={AXIS_TICK} axisLine={false} tickLine={false} />
             <YAxis tick={AXIS_TICK} axisLine={false} tickLine={false} />
-            <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(0,0,0,0.04)' }} />
-            <Bar dataKey="value" name="Total Leads" fill={BRAND.greenMid} radius={[3, 3, 0, 0]} />
-            <Bar dataKey="sold" name="Converted" fill={BRAND.gold} radius={[3, 3, 0, 0]} />
+            <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(42,24,48,0.05)' }} />
+            <Legend iconType="circle" iconSize={8} formatter={legendLabel} />
+            <Bar dataKey="value" name="Total Leads" fill={BRAND.community} radius={[3, 3, 0, 0]} isAnimationActive={false} />
+            <Bar dataKey="sold" name="Converted" fill={BRAND.accent} radius={[3, 3, 0, 0]} isAnimationActive={false} />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -486,14 +512,14 @@ function CrossAnalysis({ stats, membershipLabels, products }: { stats: Stats; me
   const allMems = products.map(p => p.slug)
   const rows = Object.entries(crossData).map(([dim, memMap]) => ({
     dim: LABELS[dim] ?? dim,
-    color: COLORS_MAP[dim] ?? BRAND.slate,
+    color: COLORS_MAP[dim] ?? BRAND.neutral,
     ...Object.fromEntries(allMems.map(m => [m, memMap[m] ?? 0])),
     total: Object.values(memMap).reduce((s, v) => s + v, 0),
   }))
 
   const pill = (active: boolean): CSSProperties => ({
-    padding: '6px 14px', borderRadius: 999, border: `1px solid ${active ? BRAND.forest : UI.borderStrong}`,
-    background: active ? BRAND.forest : UI.surface, color: active ? '#fff' : UI.textMuted,
+    padding: '6px 14px', borderRadius: 999, border: `1px solid ${active ? BRAND.plum : UI.borderStrong}`,
+    background: active ? BRAND.plum : UI.surface, color: active ? '#fff' : UI.textMuted,
     cursor: 'pointer', fontSize: 12, fontFamily: 'DM Mono', textTransform: 'uppercase',
   })
 
@@ -538,16 +564,19 @@ function CrossAnalysis({ stats, membershipLabels, products }: { stats: Stats; me
                       const intensity = max > 0 ? v / max : 0
                       return (
                         <td key={m} style={{ textAlign: 'center' }}>
+                          {/* Magnitude = one hue, light→dark. A second hue at the
+                              top of the ramp would read as a different category. */}
                           <div style={{
                             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                             width: 38, height: 28, borderRadius: 6,
-                            background: `rgba(${intensity > 0.7 ? '232,160,32' : '74,107,80'},${(intensity * 0.85).toFixed(2)})`,
-                            fontFamily: 'DM Mono', fontSize: 12, color: intensity > 0.45 ? '#fff' : UI.textMuted
+                            background: v ? rampStep(PLUM_SEQUENTIAL, intensity) : 'transparent',
+                            fontFamily: 'DM Mono', fontSize: 12,
+                            color: !v ? UI.textFaint : intensity > 0.4 ? '#fff' : UI.text
                           }}>{v || '—'}</div>
                         </td>
                       )
                     })}
-                    <td style={{ textAlign: 'center', fontWeight: 600, fontFamily: 'DM Mono', color: GOLD_TEXT }}>{row.total}</td>
+                    <td style={{ textAlign: 'center', fontWeight: 600, fontFamily: 'DM Mono', color: ACCENT_TEXT }}>{row.total}</td>
                   </tr>
                 )
               })}
@@ -565,10 +594,12 @@ function CrossAnalysis({ stats, membershipLabels, products }: { stats: Stats; me
             <CartesianGrid stroke={UI.border} vertical={false} />
             <XAxis dataKey="dim" tick={AXIS_TICK_STRONG} axisLine={false} tickLine={false} />
             <YAxis tick={AXIS_TICK} axisLine={false} tickLine={false} />
-            <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(0,0,0,0.04)' }} />
+            <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(42,24,48,0.05)' }} />
             <Legend iconType="circle" iconSize={8} formatter={(v) => <span style={{ fontSize: 10, color: UI.textMuted }}>{membershipLabels[v] ?? v}</span>} />
+            {/* 2px surface stroke keeps a visible gap between stacked segments */}
             {allMems.map(m => (
-              <Bar key={m} dataKey={m} stackId="a" fill={MEMBERSHIP_COLORS[m]} name={m} />
+              <Bar key={m} dataKey={m} stackId="a" fill={MEMBERSHIP_COLORS[m]} name={m}
+                stroke={UI.surface} strokeWidth={2} isAnimationActive={false} />
             ))}
           </BarChart>
         </ResponsiveContainer>
@@ -594,7 +625,7 @@ function SalesPerformance({ stats }: { stats: Stats }) {
     <div className="fade-up">
       <SectionHead title="Sales Performance" sub="Pre-sales team activity and pipeline management" />
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14, marginBottom: 20 }}>
-        <KPICard label="Total Pipeline Value" value={fmtMRR(stats.mrr * 12)} sub="Annualised MRR" accent="gold" />
+        <KPICard label="Total Pipeline Value" value={fmtMRR(stats.mrr * 12)} sub="Annualised MRR" accent="accent" />
         <KPICard label="Avg Response Time" value="< 4 hrs" sub="Target: same day" accent="community" />
         <KPICard label="Follow-up Compliance" value="94%" sub="Tasks completed on time" accent="community" />
       </div>
@@ -617,8 +648,8 @@ function SalesPerformance({ stats }: { stats: Stats }) {
                 <td style={{ fontFamily: 'DM Mono', fontSize: 12 }}>{c.contacted}</td>
                 <td style={{ fontFamily: 'DM Mono', fontSize: 12 }}>{c.conversations}</td>
                 <td style={{ fontFamily: 'DM Mono', fontSize: 12 }}>{c.tours}</td>
-                <td style={{ fontFamily: 'DM Mono', fontSize: 12, color: GOLD_TEXT, fontWeight: 600 }}>{c.sold}</td>
-                <td style={{ fontFamily: 'DM Mono', fontSize: 12, color: BRAND.greenMid }}>{pct(c.sold, c.assigned)}%</td>
+                <td style={{ fontFamily: 'DM Mono', fontSize: 12, color: ACCENT_TEXT, fontWeight: 600 }}>{c.sold}</td>
+                <td style={{ fontFamily: 'DM Mono', fontSize: 12, color: UI.text }}>{pct(c.sold, c.assigned)}%</td>
                 <td style={{ fontFamily: 'DM Mono', fontSize: 12 }}>{fmtMRR(c.revenue)}/mo</td>
               </tr>
             ))}
@@ -634,8 +665,10 @@ function SalesPerformance({ stats }: { stats: Stats }) {
             const h = maxVal > 0 ? (d.count / maxVal) * 160 : 0
             return (
               <div key={d.stage} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-                <div style={{ fontFamily: 'DM Mono', fontSize: 11, color: GOLD_TEXT }}>{d.count}</div>
-                <div style={{ width: '78%', height: h, background: `rgba(74,107,80,${1 - i * 0.13})`, borderRadius: '4px 4px 0 0', minHeight: 4 }} />
+                <div style={{ fontFamily: 'DM Mono', fontSize: 11, color: ACCENT_TEXT }}>{d.count}</div>
+                {/* Funnel position is ordinal — one hue, stepping lighter as the
+                    pipeline narrows, so the order reads in the colour. */}
+                <div style={{ width: '78%', height: h, background: PLUM_ORDINAL[Math.min(i, PLUM_ORDINAL.length - 1)], borderRadius: '4px 4px 0 0', minHeight: 4 }} />
                 <div style={{ fontSize: 9, fontFamily: 'DM Mono', color: UI.textFaint, textAlign: 'center', letterSpacing: '0.04em' }}>{d.stage}</div>
               </div>
             )
@@ -656,7 +689,7 @@ function MembershipIntelligence({ stats, products }: { stats: Stats; products: P
           const sold  = stats.soldByMem[p.slug] ?? 0
           const convR = leads > 0 ? (sold / leads) * 100 : 0
           const progress = p.target > 0 ? (sold / p.target) * 100 : 0
-          const color = MEMBERSHIP_COLORS[p.slug] ?? BRAND.slate
+          const color = MEMBERSHIP_COLORS[p.slug] ?? BRAND.neutral
           return (
             <div key={p.slug} className="card" style={{ borderLeft: `3px solid ${color}` }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
@@ -667,7 +700,7 @@ function MembershipIntelligence({ stats, products }: { stats: Stats; products: P
                   </span>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontFamily: 'DM Mono', fontSize: 18, color: GOLD_TEXT, fontWeight: 600 }}>${p.rate}<span style={{ fontSize: 10, opacity: 0.6 }}>/mo</span></div>
+                  <div style={{ fontFamily: 'DM Mono', fontSize: 18, color: ACCENT_TEXT, fontWeight: 600 }}>${p.rate}<span style={{ fontSize: 10, opacity: 0.6 }}>/mo</span></div>
                 </div>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 12 }}>
@@ -697,7 +730,7 @@ function OpeningReadiness({ stats, milestones }: { stats: Stats; milestones: Mil
     name: TRIBE_LABELS[k] ?? k,
     members: stats.soldByTribe[k] ?? 0,
     demand: v,
-    color: TRIBE_COLORS[k] ?? BRAND.slate,
+    color: TRIBE_COLORS[k] ?? BRAND.neutral,
   }))
 
   const genMix = Object.entries(stats.byGen)
@@ -705,7 +738,7 @@ function OpeningReadiness({ stats, milestones }: { stats: Stats; milestones: Mil
     .map(([k, v]) => ({
       name: GENERATION_LABELS[k] ?? k,
       value: v,
-      color: GENERATION_COLORS[k] ?? BRAND.slate,
+      color: GENERATION_COLORS[k] ?? BRAND.neutral,
     }))
 
   return (
@@ -713,11 +746,11 @@ function OpeningReadiness({ stats, milestones }: { stats: Stats; milestones: Mil
       <SectionHead title="Opening Readiness" sub="Operational forecast for April 2027 — staffing, capacity, and demand" />
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 20 }}>
-        <KPICard label="Days to Opening" value={fmt(stats.daysToOpen)} sub="15 April 2027" accent="gold" />
+        <KPICard label="Days to Opening" value={fmt(stats.daysToOpen)} sub="15 April 2027" accent="accent" />
         <KPICard label="Members Confirmed" value={fmt(stats.sold)} sub={`of ${stats.targetTotal} target`} accent="community"
           progress={(stats.sold / stats.targetTotal) * 100} target={fmt(stats.targetTotal)} />
         <KPICard label="Peak Demand Tribe" value="6AM Crew" sub={`${pct(stats.byTribe['early_bird'] ?? 0, stats.sold)} of members`} accent="neutral" />
-        <KPICard label="Projected Opening MRR" value={fmtMRR(stats.mrr)} sub="Founding member rates" accent="gold" />
+        <KPICard label="Projected Opening MRR" value={fmtMRR(stats.mrr)} sub="Founding member rates" accent="accent" />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
@@ -729,7 +762,7 @@ function OpeningReadiness({ stats, milestones }: { stats: Stats; milestones: Mil
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
                   <span style={{ fontSize: 12.5, color: UI.text }}>{t.name}</span>
                   <div style={{ display: 'flex', gap: 10 }}>
-                    <span style={{ fontSize: 10, fontFamily: 'DM Mono', color: GOLD_TEXT }}>{t.members} members</span>
+                    <span style={{ fontSize: 10, fontFamily: 'DM Mono', color: ACCENT_TEXT }}>{t.members} members</span>
                     <span style={{ fontSize: 10, fontFamily: 'DM Mono', color: UI.textFaint }}>{t.demand} interested</span>
                   </div>
                 </div>
@@ -737,7 +770,7 @@ function OpeningReadiness({ stats, milestones }: { stats: Stats; milestones: Mil
                   <div className="progress-fill" style={{ width: `${(t.members / Math.max(...tribeCapacity.map(x => x.members), 1)) * 100}%`, background: t.color }} />
                 </div>
                 {t.members > 40 && (
-                  <div style={{ fontSize: 10, color: BRAND.terra, fontFamily: 'DM Mono', marginTop: 3 }}>⚠ High demand — check capacity</div>
+                  <div style={{ fontSize: 10, color: BRAND.clayDeep, fontFamily: 'DM Mono', marginTop: 3 }}>⚠ High demand — check capacity</div>
                 )}
               </div>
             ))}
@@ -748,11 +781,11 @@ function OpeningReadiness({ stats, milestones }: { stats: Stats; milestones: Mil
           <div className="mono" style={{ fontSize: 9, letterSpacing: '0.18em', color: UI.textFaint, marginBottom: 16 }}>OPENING DAY GENERATION MIX</div>
           <ResponsiveContainer width="100%" height={200}>
             <PieChart>
-              <Pie data={genMix} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} innerRadius={42} paddingAngle={1.5}>
+              <Pie data={genMix} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} innerRadius={42} paddingAngle={1.5} isAnimationActive={false}>
                 {genMix.map((d, i) => <Cell key={i} fill={d.color} stroke={UI.surface} strokeWidth={2} />)}
               </Pie>
               <Tooltip content={<CustomTooltip />} />
-              <Legend iconType="circle" iconSize={8} formatter={(v) => <span style={{ fontSize: 11, color: UI.textMuted }}>{v}</span>} />
+              <Legend iconType="circle" iconSize={8} formatter={legendLabel} />
             </PieChart>
           </ResponsiveContainer>
         </div>
@@ -766,8 +799,8 @@ function OpeningReadiness({ stats, milestones }: { stats: Stats; milestones: Mil
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14, position: 'relative' }}>
               <div style={{
                 width: 12, height: 12, borderRadius: '50%', flexShrink: 0,
-                background: m.done ? BRAND.gold : UI.surface,
-                border: `2px solid ${m.done ? BRAND.gold : m.track === 'community' ? BRAND.greenMid : m.track === 'local' ? BRAND.terra : BRAND.slate}`,
+                background: m.done ? BRAND.accent : UI.surface,
+                border: `2px solid ${m.done ? BRAND.accent : m.track === 'community' ? BRAND.community : m.track === 'local' ? BRAND.local : BRAND.neutral}`,
                 position: 'absolute', left: -16
               }} />
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', paddingLeft: 4 }}>
@@ -775,7 +808,7 @@ function OpeningReadiness({ stats, milestones }: { stats: Stats; milestones: Mil
                   <span style={{ fontSize: 13, color: m.done ? UI.text : UI.textMuted }}>{m.name}</span>
                   <span className={`track-pill ${m.track}`}>{m.track === 'community' ? 'Community' : m.track === 'local' ? 'Local' : 'Both'}</span>
                 </div>
-                <span style={{ fontFamily: 'DM Mono', fontSize: 11, color: m.done ? GOLD_TEXT : UI.textFaint }}>{m.date}</span>
+                <span style={{ fontFamily: 'DM Mono', fontSize: 11, color: m.done ? ACCENT_TEXT : UI.textFaint }}>{m.date}</span>
               </div>
             </div>
           ))}
@@ -813,11 +846,12 @@ export default function Dashboard({ stats, user, config }: { stats: Stats; user:
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
       {/* Sidebar */}
-      <aside className="sidebar">
-        <div style={{ padding: '24px 20px 18px', borderBottom: `1px solid ${UI.border}` }}>
+      <aside className="sidebar on-plum">
+        <div style={{ padding: '24px 20px 18px', borderBottom: `1px solid ${UI.plumLine}` }}>
+          {/* Cream wordmark — the clay one disappears against the plum chrome */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/fahrenheit-one-logo.png" alt="Fahrenheit One" style={{ height: 30, width: 'auto', display: 'block' }} />
-          <div style={{ fontFamily: 'DM Mono', fontSize: 9, color: UI.textFaint, letterSpacing: '0.18em', marginTop: 8 }}>@ HAKOAH WHITE CITY</div>
+          <img src="/f1-wordmark-cream.png" alt="Fahrenheit One" style={{ height: 30, width: 'auto', display: 'block' }} />
+          <div style={{ fontFamily: 'DM Mono', fontSize: 9, color: UI.onPlumFaint, letterSpacing: '0.18em', marginTop: 8 }}>@ HAKOAH PADDINGTON</div>
           <div style={{ display: 'flex', gap: 6, marginTop: 12 }}>
             <span className="track-pill community">Community</span>
             <span className="track-pill local">Local</span>
@@ -835,37 +869,37 @@ export default function Dashboard({ stats, user, config }: { stats: Stats; user:
           ))}
         </nav>
 
-        <div style={{ padding: '16px 12px', borderTop: `1px solid ${UI.border}` }}>
+        <div style={{ padding: '16px 12px', borderTop: `1px solid ${UI.plumLine}` }}>
           <button onClick={() => setShowAddLead(true)}
             style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 14px',
-              background: BRAND.forest, border: 'none', borderRadius: 10,
-              color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
+              background: BRAND.clay, border: 'none', borderRadius: 6,
+              color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600, letterSpacing: '0.02em' }}>
             <Icon d={Icons.addlead} size={15} />
             Add Lead
           </button>
         </div>
 
-        <div style={{ padding: '12px 16px', borderTop: `1px solid ${UI.border}`, background: UI.surfaceAlt }}>
+        <div style={{ padding: '12px 16px', borderTop: `1px solid ${UI.plumLine}`, background: 'rgba(0,0,0,0.18)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-            <span style={{ fontFamily: 'DM Mono', fontSize: 9, color: UI.textFaint }}>TOTAL LEADS</span>
-            <span style={{ fontFamily: 'DM Mono', fontSize: 11, color: UI.text }}>{stats.total}</span>
+            <span style={{ fontFamily: 'DM Mono', fontSize: 9, color: UI.onPlumFaint }}>TOTAL LEADS</span>
+            <span style={{ fontFamily: 'DM Mono', fontSize: 11, color: UI.onPlum }}>{stats.total}</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-            <span style={{ fontFamily: 'DM Mono', fontSize: 9, color: UI.textFaint }}>MEMBERS</span>
-            <span style={{ fontFamily: 'DM Mono', fontSize: 11, color: GOLD_TEXT }}>{stats.sold}</span>
+            <span style={{ fontFamily: 'DM Mono', fontSize: 9, color: UI.onPlumFaint }}>MEMBERS</span>
+            <span style={{ fontFamily: 'DM Mono', fontSize: 11, color: BRAND.clayText }}>{stats.sold}</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ fontFamily: 'DM Mono', fontSize: 9, color: UI.textFaint }}>DAYS TO OPEN</span>
-            <span style={{ fontFamily: 'DM Mono', fontSize: 11, color: UI.text }}>{stats.daysToOpen}</span>
+            <span style={{ fontFamily: 'DM Mono', fontSize: 9, color: UI.onPlumFaint }}>DAYS TO OPEN</span>
+            <span style={{ fontFamily: 'DM Mono', fontSize: 11, color: UI.onPlum }}>{stats.daysToOpen}</span>
           </div>
         </div>
       </aside>
 
       {/* Main */}
       <main className="main-content">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 32px', borderBottom: `1px solid ${UI.border}`, background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', position: 'sticky', top: 0, zIndex: 40 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 32px', borderBottom: `1px solid ${UI.border}`, background: 'rgba(255,255,255,0.82)', backdropFilter: 'blur(12px)', position: 'sticky', top: 0, zIndex: 40 }}>
           <div>
-            <div className="serif" style={{ fontSize: 17, fontWeight: 600, color: UI.text }}>{visibleNav.find(n => n.id === section)?.label}</div>
+            <div className="serif" style={{ fontSize: 20, color: UI.text }}>{visibleNav.find(n => n.id === section)?.label}</div>
             <div style={{ fontFamily: 'DM Mono', fontSize: 9, color: UI.textFaint, letterSpacing: '0.16em', marginTop: 1 }}>
               PRE-OPENING INTELLIGENCE · {new Date().toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' }).toUpperCase()}
             </div>
@@ -873,11 +907,11 @@ export default function Dashboard({ stats, user, config }: { stats: Stats; user:
           <div style={{ display: 'flex', gap: 18, alignItems: 'center' }}>
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontFamily: 'DM Mono', fontSize: 9, color: UI.textFaint }}>OPENING TARGET</div>
-              <div style={{ fontFamily: 'DM Mono', fontSize: 13, color: GOLD_TEXT }}>{stats.sold} / {stats.targetTotal} members</div>
+              <div style={{ fontFamily: 'DM Mono', fontSize: 13, color: ACCENT_TEXT }}>{stats.sold} / {stats.targetTotal} members</div>
             </div>
             <div style={{ width: 80 }}>
               <div className="progress-bar">
-                <div className="progress-fill" style={{ width: `${Math.min((stats.sold / stats.targetTotal) * 100, 100)}%`, background: `linear-gradient(90deg, ${BRAND.greenMid}, ${BRAND.gold})` }} />
+                <div className="progress-fill" style={{ width: `${Math.min((stats.sold / stats.targetTotal) * 100, 100)}%`, background: `linear-gradient(90deg, ${BRAND.community}, ${BRAND.accent})` }} />
               </div>
             </div>
             <div style={{ width: 1, height: 32, background: UI.border }} />

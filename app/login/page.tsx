@@ -32,17 +32,22 @@ export default function LoginPage() {
   return (
     <div style={{
       minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: UI.bg, padding: 24,
+      // Same plum vignette the marketing site opens on
+      background: `radial-gradient(90% 150% at 50% 26%, ${UI.plumLine} 0%, ${UI.plum} 45%, ${UI.plumDeep} 100%)`,
+      padding: 24,
     }}>
       <div style={{
         width: '100%', maxWidth: 400, background: UI.surface, borderRadius: UI.radius,
-        border: `1px solid ${UI.border}`, boxShadow: UI.shadow, padding: '40px 36px',
+        border: `1px solid ${UI.border}`, boxShadow: '0 8px 40px rgba(0,0,0,0.35)', padding: '40px 36px',
       }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/fahrenheit-one-logo.png" alt="Fahrenheit One"
-          style={{ height: 38, width: 'auto', display: 'block', margin: '0 auto 8px' }} />
-        <div style={{ textAlign: 'center', fontSize: 11, letterSpacing: '0.22em', color: UI.textFaint, textTransform: 'uppercase', marginBottom: 32 }}>
+          style={{ height: 38, width: 'auto', display: 'block', margin: '0 auto 10px' }} />
+        <div style={{ textAlign: 'center', fontSize: 11, letterSpacing: '0.22em', color: UI.textFaint, textTransform: 'uppercase', marginBottom: 6 }}>
           Pre-Opening Dashboard
+        </div>
+        <div style={{ textAlign: 'center', fontFamily: 'DM Mono', fontSize: 9, letterSpacing: '0.2em', color: UI.textFaint, textTransform: 'uppercase', marginBottom: 30 }}>
+          @ Hakoah Paddington
         </div>
 
         <form onSubmit={submit}>
@@ -55,7 +60,7 @@ export default function LoginPage() {
             placeholder="••••••••" style={inputStyle} />
 
           {error && (
-            <div style={{ marginTop: 16, padding: '10px 12px', background: '#FFF1EF', border: `1px solid ${BRAND.brick}`, borderRadius: UI.radiusSm, fontSize: 13, color: BRAND.terra }}>
+            <div style={{ marginTop: 16, padding: '10px 12px', background: '#FBEFE9', border: `1px solid ${BRAND.clay}`, borderRadius: UI.radiusSm, fontSize: 13, color: BRAND.clayDeep }}>
               {error}
             </div>
           )}
@@ -63,8 +68,8 @@ export default function LoginPage() {
           <button type="submit" disabled={pending}
             style={{
               width: '100%', marginTop: 24, padding: '12px', fontSize: 15, fontWeight: 600,
-              background: pending ? BRAND.greenMid : BRAND.forest, color: '#fff',
-              border: 'none', borderRadius: UI.radiusSm, cursor: pending ? 'default' : 'pointer',
+              background: pending ? BRAND.clay : BRAND.clayHover, color: '#fff',
+              border: 'none', borderRadius: 6, cursor: pending ? 'default' : 'pointer',
               transition: 'background 0.15s',
             }}>
             {pending ? 'Signing in…' : 'Sign In'}
