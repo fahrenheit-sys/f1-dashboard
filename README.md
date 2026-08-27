@@ -1,5 +1,5 @@
 # Fahrenheit One — Pre-Opening Sales Dashboard
-**@ Hakoah White City | June 2026 – April 2027**
+**@ Hakoah Paddington | June 2026 – April 2027**
 
 ## Stack
 - **Next.js 16** (App Router) + **React 19**

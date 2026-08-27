@@ -824,7 +824,11 @@ function OpeningReadiness({ stats, milestones }: { stats: Stats; milestones: Mil
 // ══════════════════════════════════════════════════════════
 type Section = 'overview' | 'marketing' | 'intel' | 'cross' | 'sales' | 'product' | 'readiness'
 
-export default function Dashboard({ stats, user, config }: { stats: Stats; user: SessionUser; config: DashboardConfig }) {
+export default function Dashboard(
+  { stats, user, config, mode, testCount }:
+  { stats: Stats; user: SessionUser; config: DashboardConfig; mode: 'live' | 'test'; testCount: number },
+) {
+  const isTestMode = mode === 'test'
   const router = useRouter()
   const [section, setSection] = useState<Section>('overview')
   const [showAddLead, setShowAddLead] = useState(false)
@@ -856,6 +860,30 @@ export default function Dashboard({ stats, user, config }: { stats: Stats; user:
             <span className="track-pill community">Community</span>
             <span className="track-pill local">Local</span>
           </div>
+
+          {/* Data mode. Live is the default and shows real leads only; test
+              mode drops the filter so nothing is hidden from both views. */}
+          <div style={{ display: 'flex', marginTop: 16, borderRadius: 6, overflow: 'hidden', border: `1px solid ${UI.plumLine}` }}>
+            {(['live', 'test'] as const).map(m => {
+              const on = mode === m
+              return (
+                <a key={m} href={m === 'live' ? '/' : '/?mode=test'}
+                  style={{
+                    flex: 1, textAlign: 'center', padding: '7px 0', textDecoration: 'none',
+                    fontFamily: 'var(--sans)', fontSize: 10, fontWeight: 700, letterSpacing: '0.12em',
+                    background: on ? (m === 'test' ? BRAND.clay : 'rgba(255,255,255,0.14)') : 'transparent',
+                    color: on ? '#fff' : UI.onPlumFaint,
+                  }}>
+                  {m === 'live' ? 'LIVE' : 'TEST'}
+                </a>
+              )
+            })}
+          </div>
+          {!isTestMode && testCount > 0 && (
+            <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: UI.onPlumFaint, marginTop: 8, letterSpacing: '0.04em' }}>
+              {testCount} test {testCount === 1 ? 'lead' : 'leads'} hidden
+            </div>
+          )}
         </div>
 
         <nav style={{ flex: 1, paddingTop: 8, overflowY: 'auto' }}>
@@ -934,6 +962,36 @@ export default function Dashboard({ stats, user, config }: { stats: Stats; user:
             </div>
           </div>
         </div>
+
+        {isTestMode && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 10, padding: '10px 32px',
+            background: BRAND.clay, color: '#fff',
+            fontFamily: 'var(--sans)', fontSize: 12, fontWeight: 600, letterSpacing: '0.02em',
+          }}>
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.14em',
+              border: '1px solid rgba(255,255,255,0.55)', borderRadius: 3, padding: '2px 7px' }}>TEST MODE</span>
+            These figures include test submissions and are not real performance.
+          </div>
+        )}
+
+        {!isTestMode && stats.total === 0 && (
+          <div style={{ padding: '48px 32px 0' }}>
+            <div style={{
+              border: `1px dashed ${UI.border}`, borderRadius: 8, padding: '40px 32px',
+              textAlign: 'center', background: UI.surface,
+            }}>
+              <div style={{ fontFamily: 'var(--serif)', fontSize: 24, color: UI.text, marginBottom: 10 }}>
+                No live leads yet.
+              </div>
+              <div style={{ fontSize: 14, color: UI.textMuted, maxWidth: 460, margin: '0 auto', lineHeight: 1.6 }}>
+                Every chart below is empty because nothing real has come through yet — not because
+                anything is broken. The first opt-in from the website will appear here within seconds.
+                {testCount > 0 && <> Switch to <b>test mode</b> to see the {testCount} test {testCount === 1 ? 'submission' : 'submissions'}.</>}
+              </div>
+            </div>
+          </div>
+        )}
 
         <div style={{ padding: '32px' }}>
           {section === 'overview'  && <ExecutiveOverview stats={stats} />}

@@ -59,18 +59,58 @@ function parseTags(raw: unknown): string[] {
   return []
 }
 
-// Map an arbitrary UTM source onto the lead_source CHECK enum (defaults to 'other'
-// so an unexpected source never blocks the upsert).
-function normalizeLeadSource(utmSource: string | null | undefined): string {
-  if (!utmSource) return 'other'
-  const s = utmSource.toLowerCase()
-  if (/(meta|facebook|instagram|\bfb\b|\big\b)/.test(s)) return 'meta_paid'
-  if (s.includes('google'))                              return 'google_search'
-  if (s.includes('newsletter') || s.includes('hakoah'))  return 'hakoah_newsletter'
-  if (s.includes('referral'))                            return 'referral'
-  if (s.includes('organic') || s.includes('social'))     return 'organic_social'
-  if (s.includes('event'))                               return 'event'
-  return 'other'
+// "How did you hear about us?" answers, mapped onto the lead_source enum.
+// These are the channels a UTM cannot see — signage, press, newsletters, word
+// of mouth — so a self-reported answer is the only signal available for them.
+const HEARD_MAP: Record<string, string> = {
+  'hakoah newsletter':                                 'hakoah_newsletter',
+  'synagogue, school or community organisation':       'community_partnership',
+  'a friend or family member':                         'referral',
+  'australian jewish news':                            'pr_editorial',
+  'press or local media':                              'pr_editorial',
+  'instagram or facebook':                             'organic_social',
+  'google or web search':                              'google_search',
+  'saw a sign or billboard':                           'hoarding_qr',
+  'saw a sign or drove past':                          'hoarding_qr',
+  'walked or drove past':                              'hoarding_qr',
+  'other':                                             'other',
+}
+
+// Resolve lead_source. A UTM is an observed click and beats a remembered one,
+// so it wins when present; the self-reported answer covers everything else.
+// Nothing at all means they arrived by typing the address.
+function normalizeLeadSource(
+  utmSource?: string | null,
+  utmMedium?: string | null,
+  heardAbout?: string | null,
+): string {
+  const s = (utmSource ?? '').toLowerCase()
+  if (s) {
+    // Medium separates a paid click from an organic one on the same platform —
+    // the Instagram bio link and an Instagram ad share a utm_source.
+    const paid = /(paid|cpc|ppc|ads?)/.test((utmMedium ?? '').toLowerCase())
+    if (/(meta|facebook|instagram|\bfb\b|\big\b)/.test(s)) return paid ? 'meta_paid' : 'organic_social'
+    if (s.includes('google'))                              return paid ? 'google_search' : 'google_search'
+    if (s.includes('newsletter') || s.includes('hakoah'))  return 'hakoah_newsletter'
+    if (s.includes('referral'))                            return 'referral'
+    if (s.includes('organic') || s.includes('social'))     return 'organic_social'
+    if (s.includes('event'))                               return 'event'
+    return 'other'
+  }
+  const h = (heardAbout ?? '').toLowerCase().trim()
+  if (h) return HEARD_MAP[h] ?? 'other'
+  return 'website_direct'
+}
+
+// A lead is test data if its address matches TEST_LEAD_EMAIL_PATTERN (a regex,
+// e.g. "\\+test|@example\\.com"). Left unset, nothing is auto-flagged — better to
+// show a test lead in the live view than to silently hide a real one. The live
+// view reports how many rows it is hiding, so a mistake here stays visible.
+function isTestLead(email: string): boolean {
+  const pattern = process.env.TEST_LEAD_EMAIL_PATTERN
+  if (!pattern) return false
+  try { return new RegExp(pattern, 'i').test(email) }
+  catch { return false }   // a bad pattern must not misfile real leads
 }
 
 function deriveGeneration(yob: number | null): string | null {
@@ -143,7 +183,13 @@ export async function POST(req: NextRequest) {
       utm_source:          contact.attributionSource?.utmSource ?? null,
       utm_medium:          contact.attributionSource?.utmMedium ?? null,
       utm_campaign:        contact.attributionSource?.utmCampaign ?? null,
-      lead_source:         normalizeLeadSource(contact.attributionSource?.utmSource),
+      lead_source:         normalizeLeadSource(
+                             contact.attributionSource?.utmSource,
+                             contact.attributionSource?.utmMedium,
+                             contact.customField?.heard_about,
+                           ),
+      heard_about:         contact.customField?.heard_about ?? null,
+      is_test:             contact.isTest === true || isTestLead(email),
       ghl_contact_id:      contact.id,
       assigned_to:         contact.assignedTo ?? null,
       membership_sold:     stage === 'founding_member' || stage === 'member',

@@ -1,5 +1,5 @@
 -- ============================================================
--- FAHRENHEIT ONE @ HAKOAH WHITE CITY
+-- FAHRENHEIT ONE @ HAKOAH PADDINGTON
 -- Supabase Database Schema
 -- ============================================================
 
