@@ -84,7 +84,11 @@ CREATE TABLE membership_products (
   name TEXT NOT NULL,
   slug TEXT UNIQUE NOT NULL,
   track TEXT CHECK (track IN ('community','local','both')),
+  -- Derived from membership_products by trg_lead_rate on first write, then
+  -- left alone: a founding rate locks at signup. weekly_rate is the charged
+  -- price; monthly_rate is weekly x 52 / 12 and drives MRR.
   monthly_rate NUMERIC(10,2),
+  weekly_rate  NUMERIC(10,2),
   join_fee NUMERIC(10,2),
   is_founding BOOLEAN DEFAULT FALSE,
   is_active BOOLEAN DEFAULT TRUE,
