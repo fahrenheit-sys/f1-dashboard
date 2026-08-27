@@ -5,7 +5,10 @@ export type Product = {
   name: string
   slug: string
   track: string
+  /** Monthly equivalent (weekly x 52 / 12). Used for MRR — never shown as a price. */
   rate: number
+  /** What a member is actually charged. This is the number to display. */
+  weeklyRate: number
   joinFee: number
   target: number
   isFounding: boolean
@@ -51,17 +54,17 @@ const FALLBACK_MILESTONES: Milestone[] = [
 ]
 
 const FALLBACK_PRODUCTS: Product[] = [
-  { name: 'Hakoah One', slug: 'hakoah_one', track: 'community', rate: 120, joinFee: 199, target: 120, isFounding: true },
-  { name: 'Lifestyle', slug: 'lifestyle', track: 'both', rate: 100, joinFee: 299, target: 600, isFounding: false },
-  { name: 'Fitness', slug: 'fitness', track: 'both', rate: 70, joinFee: 199, target: 300, isFounding: false },
-  { name: 'Wellness', slug: 'wellness', track: 'both', rate: 60, joinFee: 149, target: 60, isFounding: false },
-  { name: 'Teen', slug: 'teen', track: 'both', rate: 50, joinFee: 99, target: 120, isFounding: false },
+  { name: 'Hakoah One', slug: 'hakoah_one', track: 'community', rate: 520.0, weeklyRate: 120, joinFee: 199, target: 120, isFounding: true },
+  { name: 'Lifestyle', slug: 'lifestyle', track: 'both', rate: 433.33, weeklyRate: 100, joinFee: 299, target: 600, isFounding: false },
+  { name: 'Fitness', slug: 'fitness', track: 'both', rate: 303.33, weeklyRate: 70, joinFee: 199, target: 300, isFounding: false },
+  { name: 'Wellness', slug: 'wellness', track: 'both', rate: 260.0, weeklyRate: 60, joinFee: 149, target: 60, isFounding: false },
+  { name: 'Teen', slug: 'teen', track: 'both', rate: 216.67, weeklyRate: 50, joinFee: 99, target: 120, isFounding: false },
 ]
 
 async function loadProducts(supabase: ReturnType<typeof createServerSupabase>): Promise<Product[]> {
   const { data, error } = await supabase
     .from('membership_products')
-    .select('name, slug, track, monthly_rate, join_fee, target_members, is_founding')
+    .select('name, slug, track, monthly_rate, weekly_rate, join_fee, target_members, is_founding')
     .eq('is_active', true)
     .order('target_members', { ascending: false })
   if (error || !data?.length) return FALLBACK_PRODUCTS
@@ -70,6 +73,7 @@ async function loadProducts(supabase: ReturnType<typeof createServerSupabase>): 
     slug: p.slug,
     track: p.track ?? 'both',
     rate: Number(p.monthly_rate) || 0,
+    weeklyRate: Number(p.weekly_rate) || 0,
     joinFee: Number(p.join_fee) || 0,
     target: Number(p.target_members) || 0,
     isFounding: !!p.is_founding,

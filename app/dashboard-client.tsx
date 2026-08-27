@@ -700,7 +700,7 @@ function MembershipIntelligence({ stats, products }: { stats: Stats; products: P
                   </span>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontFamily: 'var(--mono)', fontSize: 18, color: ACCENT_TEXT, fontWeight: 600 }}>${p.rate}<span style={{ fontSize: 10, opacity: 0.6 }}>/mo</span></div>
+                  <div style={{ fontFamily: 'var(--mono)', fontSize: 18, color: ACCENT_TEXT, fontWeight: 600 }}>${p.weeklyRate}<span style={{ fontSize: 10, opacity: 0.6 }}>/wk</span></div>
                 </div>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 12 }}>

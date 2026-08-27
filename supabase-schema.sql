@@ -65,7 +65,8 @@ CREATE TABLE leads (
   membership_sold BOOLEAN DEFAULT FALSE,
   membership_sold_at TIMESTAMPTZ,
   membership_type TEXT,
-  monthly_rate NUMERIC(10,2),
+  monthly_rate NUMERIC(10,2),   -- monthly equivalent of weekly_rate; drives MRR
+  weekly_rate  NUMERIC(10,2),   -- what a member is actually charged
   join_fee NUMERIC(10,2),
 
   -- GHL
