@@ -276,13 +276,13 @@ function ExecutiveOverview({ stats }: { stats: Stats }) {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 26 }}>
         <KPICard label="Community Leads" value={fmt(stats.community)} sub={`${pct(stats.community, stats.total)}% of pipeline`} accent="community"
-          progress={(communityFounders / stats.targetCommunity) * 100} target="180 members" />
+          progress={(communityFounders / stats.targetCommunity) * 100} target={`${stats.targetCommunity} members`} />
         <KPICard label="Community Members" value={fmt(communityFounders)} accent="community"
-          progress={(communityFounders / stats.targetCommunity) * 100} target="180" />
+          progress={(communityFounders / stats.targetCommunity) * 100} target={String(stats.targetCommunity)} />
         <KPICard label="Local Leads" value={fmt(stats.local)} sub={`${pct(stats.local, stats.total)}% of pipeline`} accent="local"
-          progress={(localFounders / stats.targetLocal) * 100} target="265 members" />
+          progress={(localFounders / stats.targetLocal) * 100} target={`${stats.targetLocal} members`} />
         <KPICard label="Local Members" value={fmt(localFounders)} accent="local"
-          progress={(localFounders / stats.targetLocal) * 100} target="265" />
+          progress={(localFounders / stats.targetLocal) * 100} target={String(stats.targetLocal)} />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>

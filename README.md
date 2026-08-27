@@ -70,7 +70,7 @@ Most content is editable directly in the **Supabase Table Editor** — no code c
 | Leads & all their attributes | `leads` | Drives every chart, MRR, and conversion |
 | Membership products: name, `$`/mo, target, track, visibility | `membership_products` | `is_active = false` hides a product; chart labels follow `name`; cards join to leads by `slug` |
 | Opening-day milestones (the timeline) | `milestones` | Set `actual_date` to mark one **done**; ordered by `target_date` |
-| Opening-day targets (445 / 180 / 265) + opening date | `settings` (single row) | Falls back to those defaults if the table/row is absent |
+| Opening-day targets (1,200 / 600 / 600) + opening date | `settings` (single row) | Falls back to those defaults if the table/row is absent |
 | Team / user access | Supabase Auth (or the **Team Access** UI) | — |
 
 **Still code-only** (require an edit + push to `main`): display labels for generation / tribe / lead-source / stage (`lib/constants.ts`), brand colors, and the Sales-team consultants (currently placeholder data).

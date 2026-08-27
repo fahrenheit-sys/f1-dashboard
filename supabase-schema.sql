@@ -96,9 +96,9 @@ CREATE TABLE membership_products (
 -- The dashboard falls back to these same defaults if the table is absent.
 CREATE TABLE settings (
   id INTEGER PRIMARY KEY DEFAULT 1,
-  target_total INTEGER NOT NULL DEFAULT 445,
-  target_community INTEGER NOT NULL DEFAULT 180,
-  target_local INTEGER NOT NULL DEFAULT 265,
+  target_total INTEGER NOT NULL DEFAULT 1200,
+  target_community INTEGER NOT NULL DEFAULT 600,
+  target_local INTEGER NOT NULL DEFAULT 600,
   opening_date DATE NOT NULL DEFAULT '2027-04-15',
   CONSTRAINT settings_singleton CHECK (id = 1)
 );
@@ -248,14 +248,14 @@ INSERT INTO milestones (name, stage_code, track, target_date, target_count) VALU
 ('Community Interest — 200 leads','2a', 'community', '2026-07-31', 200),
 ('Community VIP List — 150',      '3a', 'community', '2026-08-31', 150),
 ('Community Membership Drop',     '4a', 'community', '2026-09-15', NULL),
-('Community Founding Members',    '4a', 'community', '2026-09-30', 180),
+('Community Founding Members',    '4a', 'community', '2026-09-30', 600),
 ('Local Awareness Launch',        '1b', 'local',     '2026-11-01', NULL),
 ('Local Interest — 400 leads',    '2b', 'local',     '2026-12-31', 400),
 ('Local VIP List — 200',          '3b', 'local',     '2027-01-31', 200),
 ('Local Membership Drop',         '4b', 'local',     '2027-02-15', NULL),
-('Local Founding Members',        '4b', 'local',     '2027-02-28', 265),
+('Local Founding Members',        '4b', 'local',     '2027-02-28', 600),
 ('Early Access',                  '6',  'both',      '2027-04-01', NULL),
-('Opening Day',                   '7',  'both',      '2027-04-15', 445);
+('Opening Day',                   '7',  'both',      '2027-04-15', 1200);
 
 -- ============================================================
 -- MIGRATIONS — one-time scripts for databases created before a
@@ -308,9 +308,9 @@ ALTER TABLE public.leads
 -- canonical version). Included here so existing databases get it too.
 CREATE TABLE IF NOT EXISTS settings (
   id INTEGER PRIMARY KEY DEFAULT 1,
-  target_total INTEGER NOT NULL DEFAULT 445,
-  target_community INTEGER NOT NULL DEFAULT 180,
-  target_local INTEGER NOT NULL DEFAULT 265,
+  target_total INTEGER NOT NULL DEFAULT 1200,
+  target_community INTEGER NOT NULL DEFAULT 600,
+  target_local INTEGER NOT NULL DEFAULT 600,
   opening_date DATE NOT NULL DEFAULT '2027-04-15',
   CONSTRAINT settings_singleton CHECK (id = 1)
 );

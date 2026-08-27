@@ -17,7 +17,7 @@ export type LeadRow = {
 }
 
 const DEFAULT_OPENING_DATE = '2027-04-15'
-const DEFAULT_TARGETS = { total: 445, community: 180, local: 265 }
+const DEFAULT_TARGETS = { total: 1200, community: 600, local: 600 }
 
 export type StatsOptions = {
   targets?: { total: number; community: number; local: number }
