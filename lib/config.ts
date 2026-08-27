@@ -51,11 +51,11 @@ const FALLBACK_MILESTONES: Milestone[] = [
 ]
 
 const FALLBACK_PRODUCTS: Product[] = [
-  { name: 'Hakoah One', slug: 'hakoah_one', track: 'community', rate: 89, joinFee: 199, target: 180, isFounding: true },
-  { name: 'Lifestyle', slug: 'lifestyle', track: 'both', rate: 149, joinFee: 299, target: 80, isFounding: false },
-  { name: 'Fitness', slug: 'fitness', track: 'both', rate: 99, joinFee: 199, target: 120, isFounding: false },
-  { name: 'Wellness', slug: 'wellness', track: 'both', rate: 79, joinFee: 149, target: 80, isFounding: false },
-  { name: 'Teen', slug: 'teen', track: 'both', rate: 49, joinFee: 99, target: 45, isFounding: false },
+  { name: 'Hakoah One', slug: 'hakoah_one', track: 'community', rate: 89, joinFee: 199, target: 120, isFounding: true },
+  { name: 'Lifestyle', slug: 'lifestyle', track: 'both', rate: 149, joinFee: 299, target: 600, isFounding: false },
+  { name: 'Fitness', slug: 'fitness', track: 'both', rate: 99, joinFee: 199, target: 300, isFounding: false },
+  { name: 'Wellness', slug: 'wellness', track: 'both', rate: 79, joinFee: 149, target: 60, isFounding: false },
+  { name: 'Teen', slug: 'teen', track: 'both', rate: 49, joinFee: 99, target: 120, isFounding: false },
 ]
 
 async function loadProducts(supabase: ReturnType<typeof createServerSupabase>): Promise<Product[]> {

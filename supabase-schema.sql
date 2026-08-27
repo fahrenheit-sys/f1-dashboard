@@ -236,11 +236,11 @@ CREATE TRIGGER leads_stage_change
 
 -- ── SEED: membership products ─────────────────────────────
 INSERT INTO membership_products (name, slug, track, monthly_rate, join_fee, is_founding, target_members, description) VALUES
-('Hakoah One',    'hakoah_one',    'community', 89,  199, TRUE,  180, 'Founding community membership — pre-opening exclusive'),
-('Lifestyle',     'lifestyle',     'both',      149, 299, FALSE, 160, 'Gym + classes + recovery centre + wellness circuit + pool + pickleball + run club. 7 days.'),
-('Fitness',       'fitness',       'both',      99,  199, FALSE, 120, 'Gym floor + group fitness. 7 days.'),
-('Wellness',      'wellness',      'both',      79,  149, FALSE, 80,  'Recovery Area + Wellness Circuit + Yoga + eGym. Mon–Fri 9am–5pm.'),
-('Teen',          'teen',          'both',      49,  99,  FALSE, 45,  'Age 14+: eGym + supervised training. Afternoons + weekends.');
+('Hakoah One',    'hakoah_one',    'community', 89,  199, TRUE,  120, 'Founding community membership — pre-opening exclusive'),
+('Lifestyle',     'lifestyle',     'both',      149, 299, FALSE, 600, 'Gym + classes + recovery centre + wellness circuit + pool + pickleball + run club. 7 days.'),
+('Fitness',       'fitness',       'both',      99,  199, FALSE, 300, 'Gym floor + group fitness. 7 days.'),
+('Wellness',      'wellness',      'both',      79,  149, FALSE, 60,  'Recovery Area + Wellness Circuit + Yoga + eGym. Mon–Fri 9am–5pm.'),
+('Teen',          'teen',          'both',      49,  99,  FALSE, 120,  'Age 14+: eGym + supervised training. Afternoons + weekends.');
 
 -- ── SEED: milestones ──────────────────────────────────────
 INSERT INTO milestones (name, stage_code, track, target_date, target_count) VALUES
