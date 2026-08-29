@@ -196,9 +196,20 @@ export async function POST(req: NextRequest) {
       tags:                tagList,
     }
 
+    // The root page posts twice — once from the form, once from the popup — and
+    // both are fire-and-forget, so they can arrive in either order. When the
+    // sparser stage-1 payload lands second it would overwrite the popup's
+    // answers with nulls, which is exactly what happened on 29 Aug: the derived
+    // rate survived while the membership_interest that produced it did not.
+    // Dropping empty values means a later, thinner write can add but never erase.
+    const merged = Object.fromEntries(
+      Object.entries(leadData).filter(([k, v]) =>
+        k === 'email' || (v !== null && v !== undefined && v !== '')),
+    )
+
     const { data, error } = await supabase
       .from('leads')
-      .upsert(leadData, { onConflict: 'email' })
+      .upsert(merged, { onConflict: 'email' })
       .select()
       .single()
 
