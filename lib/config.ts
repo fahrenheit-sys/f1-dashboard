@@ -32,7 +32,7 @@ export type DashboardConfig = {
 // Defaults used when Supabase has no data yet (e.g. before the settings table
 // is created). Keeps the dashboard working out of the box.
 export const DEFAULT_TARGETS = { total: 1200, community: 600, local: 600 }
-export const DEFAULT_OPENING_DATE = '2027-04-15'
+export const DEFAULT_OPENING_DATE = '2027-05-03'
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 function fmtMonthYear(date: string): string {

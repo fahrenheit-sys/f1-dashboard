@@ -1,4 +1,4 @@
-// Fahrenheit One "Country Club" plum design tokens — matched to clubf1.com.au.
+// The Grandstand "Country Club" plum design tokens — matched to clubf1.com.au.
 // Chrome (sidebar) is deep plum; the data canvas stays light so dense tables and
 // charts remain readable. Brand + data-viz colours live in lib/constants BRAND.
 export const UI = {

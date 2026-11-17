@@ -23,8 +23,8 @@ const dmMono = DM_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Fahrenheit One — Pre-Opening Dashboard',
-  description: 'Sales & Market Intelligence Platform — Fahrenheit One @ Hakoah Paddington',
+  title: 'My Pre Sales Dash — The Grandstand',
+  description: 'Pre-sales and market intelligence — The Grandstand @ Hakoah Paddington',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

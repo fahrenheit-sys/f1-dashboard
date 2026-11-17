@@ -226,7 +226,7 @@ export async function POST(req: NextRequest) {
 export async function GET() {
   return NextResponse.json({
     status: 'active',
-    endpoint: 'GHL Webhook — Fahrenheit One',
+    endpoint: 'GHL Webhook — The Grandstand',
     timestamp: new Date().toISOString(),
   })
 }

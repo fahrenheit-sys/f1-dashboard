@@ -271,7 +271,7 @@ function ExecutiveOverview({ stats }: { stats: Stats }) {
         <KPICard label="Founding Members" value={fmt(stats.sold)} sub="Agreements signed" accent="accent"
           progress={(stats.sold / stats.targetTotal) * 100} target={fmt(stats.targetTotal)} />
         <KPICard label="Projected MRR" value={fmtMRR(stats.mrr)} sub="At founding rates" accent="accent" />
-        <KPICard label="Days to Opening" value={fmt(stats.daysToOpen)} sub="April 2027" accent="neutral" />
+        <KPICard label="Days to Opening" value={fmt(stats.daysToOpen)} sub={stats.openingLabel} accent="neutral" />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 26 }}>
@@ -743,10 +743,10 @@ function OpeningReadiness({ stats, milestones }: { stats: Stats; milestones: Mil
 
   return (
     <div className="fade-up">
-      <SectionHead title="Opening Readiness" sub="Operational forecast for April 2027 — staffing, capacity, and demand" />
+      <SectionHead title="Opening Readiness" sub={`Operational forecast for ${stats.openingLabel} — staffing, capacity, and demand`} />
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 20 }}>
-        <KPICard label="Days to Opening" value={fmt(stats.daysToOpen)} sub="15 April 2027" accent="accent" />
+        <KPICard label="Days to Opening" value={fmt(stats.daysToOpen)} sub={stats.openingLabel} accent="accent" />
         <KPICard label="Members Confirmed" value={fmt(stats.sold)} sub={`of ${stats.targetTotal} target`} accent="community"
           progress={(stats.sold / stats.targetTotal) * 100} target={fmt(stats.targetTotal)} />
         <KPICard label="Peak Demand Tribe" value="6AM Crew" sub={`${pct(stats.byTribe['early_bird'] ?? 0, stats.sold)} of members`} accent="neutral" />
@@ -854,7 +854,7 @@ export default function Dashboard(
         <div style={{ padding: '26px 20px 20px', borderBottom: `1px solid ${UI.plumLine}` }}>
           {/* Cream wordmark — the clay one disappears against the plum chrome */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/f1-wordmark-cream.png" alt="Fahrenheit One" style={{ height: 46, width: 'auto', display: 'block' }} />
+          <img src="/grandstand-wordmark-cream.png" alt="The Grandstand" style={{ width: '100%', maxWidth: 210, height: 'auto', display: 'block' }} />
           <div style={{ fontSize: 10, fontWeight: 600, color: '#FFFFFF', letterSpacing: '0.16em', marginTop: 10 }}>@ HAKOAH PADDINGTON</div>
           <div style={{ display: 'flex', gap: 6, marginTop: 14 }}>
             <span className="track-pill community">Community</span>

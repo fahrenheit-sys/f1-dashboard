@@ -154,5 +154,5 @@ export const PIPELINE_STAGES = [
   'proposal','founding_member','member'
 ]
 
-export const OPENING_DATE = new Date('2027-04-15')
+export const OPENING_DATE = new Date('2027-05-03')
 export const CAMPAIGN_START = new Date('2026-06-01')

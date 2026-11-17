@@ -16,7 +16,7 @@ export type LeadRow = {
   created_at: string
 }
 
-const DEFAULT_OPENING_DATE = '2027-04-15'
+const DEFAULT_OPENING_DATE = '2027-05-03'
 const DEFAULT_TARGETS = { total: 1200, community: 600, local: 600 }
 
 export type StatsOptions = {
@@ -108,6 +108,8 @@ export function computeStats(leads: LeadRow[], opts: StatsOptions = {}) {
     byStage, byGen, byTribe, byMem, bySrc, byTrackStage,
     soldByTrack, soldByGen, soldByTribe, soldByMem, soldBySrc,
     crossGenMem, crossTribeMem, weekly,
+    // Month precision only: the exact opening day is not yet fixed.
+    openingLabel: new Date(openingDate).toLocaleDateString('en-AU', { month: 'long', year: 'numeric', timeZone: 'Australia/Sydney' }),
     daysToOpen: Math.ceil((new Date(openingDate).getTime() - Date.now()) / 86400000),
     targetTotal: targets.total,
     targetCommunity: targets.community,

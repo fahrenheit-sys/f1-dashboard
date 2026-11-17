@@ -41,19 +41,16 @@ export default function LoginPage() {
         border: `1px solid ${UI.border}`, boxShadow: '0 8px 40px rgba(0,0,0,0.35)', padding: '40px 36px',
       }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/fahrenheit-one-logo.png" alt="Fahrenheit One"
-          style={{ height: 38, width: 'auto', display: 'block', margin: '0 auto 10px' }} />
-        <div style={{ textAlign: 'center', fontSize: 11, letterSpacing: '0.22em', color: UI.textFaint, textTransform: 'uppercase', marginBottom: 6 }}>
-          Pre-Opening Dashboard
-        </div>
-        <div style={{ textAlign: 'center', fontFamily: 'var(--mono)', fontSize: 9, letterSpacing: '0.2em', color: UI.textFaint, textTransform: 'uppercase', marginBottom: 30 }}>
-          @ Hakoah Paddington
+        <img src="/grandstand-lockup-plum.png" alt="The Grandstand at Hakoah Paddington"
+          style={{ width: '100%', maxWidth: 260, height: 'auto', display: 'block', margin: '0 auto 14px' }} />
+        <div style={{ textAlign: 'center', fontSize: 11, letterSpacing: '0.22em', color: UI.textFaint, textTransform: 'uppercase', marginBottom: 30 }}>
+          My Pre Sales Dash
         </div>
 
         <form onSubmit={submit}>
           <label style={{ display: 'block', fontSize: 12, color: UI.textMuted, marginBottom: 6 }}>Email</label>
           <input type="email" autoComplete="email" value={email} onChange={e => setEmail(e.target.value)}
-            placeholder="you@fahrenheitone.com" style={{ ...inputStyle, marginBottom: 16 }} />
+            placeholder="you@thegrandstandpaddington.com.au" style={{ ...inputStyle, marginBottom: 16 }} />
 
           <label style={{ display: 'block', fontSize: 12, color: UI.textMuted, marginBottom: 6 }}>Password</label>
           <input type="password" autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)}
