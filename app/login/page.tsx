@@ -44,7 +44,7 @@ export default function LoginPage() {
         <img src="/grandstand-lockup-plum.png" alt="The Grandstand at Hakoah Paddington"
           style={{ width: '100%', maxWidth: 260, height: 'auto', display: 'block', margin: '0 auto 14px' }} />
         <div style={{ textAlign: 'center', fontSize: 11, letterSpacing: '0.22em', color: UI.textFaint, textTransform: 'uppercase', marginBottom: 30 }}>
-          My Pre Sales Dash
+          TGS Pre Sales Dash
         </div>
 
         <form onSubmit={submit}>

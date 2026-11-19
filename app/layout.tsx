@@ -23,7 +23,7 @@ const dmMono = DM_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'My Pre Sales Dash — The Grandstand',
+  title: 'TGS Pre Sales Dash — The Grandstand',
   description: 'Pre-sales and market intelligence — The Grandstand @ Hakoah Paddington',
 }
 
